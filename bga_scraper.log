@@ -1,0 +1,328 @@
+2026-02-25 11:45:00,515 - INFO - Lancement de Firefox...
+2026-02-25 11:45:00,516 - INFO - ====== WebDriver manager ======
+2026-02-25 11:45:01,721 - INFO - Get LATEST geckodriver version for 147.0 firefox
+2026-02-25 11:45:02,102 - INFO - Get LATEST geckodriver version for 147.0 firefox
+2026-02-25 11:45:02,192 - INFO - Get LATEST geckodriver version for 147.0 firefox
+2026-02-25 11:45:02,272 - INFO - Getting latest mozilla release info for v0.36.0
+2026-02-25 11:45:02,611 - INFO - About to download new driver from https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-linux64.tar.gz
+2026-02-25 11:45:02,740 - INFO - Driver downloading response is 200
+2026-02-25 11:45:03,016 - INFO - Get LATEST geckodriver version for 147.0 firefox
+2026-02-25 11:45:03,205 - INFO - Driver has been saved in cache [/home/hafida/.wdm/drivers/geckodriver/linux64/v0.36.0]
+2026-02-25 11:45:15,485 - INFO - ERREUR CONNEXION : Message: Process unexpectedly closed with status 1
+
+2026-02-25 11:45:15,490 - INFO - Traceback (most recent call last):
+  File "/home/hafida/Bureau/connect4/scripts/bga_scraper.py", line 50, in connect
+    self.driver = Firefox(service=service, options=options)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/firefox/webdriver.py", line 67, in __init__
+    super().__init__(command_executor=executor, options=options)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/remote/webdriver.py", line 206, in __init__
+    self.start_session(capabilities)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/remote/webdriver.py", line 290, in start_session
+    response = self.execute(Command.NEW_SESSION, caps)["value"]
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/remote/webdriver.py", line 345, in execute
+    self.error_handler.check_response(response)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/remote/errorhandler.py", line 229, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.WebDriverException: Message: Process unexpectedly closed with status 1
+
+
+2026-02-25 11:52:21,634 - INFO - Lancement de Firefox...
+2026-02-25 11:52:21,647 - INFO - ====== WebDriver manager ======
+2026-02-25 11:52:22,284 - INFO - Get LATEST geckodriver version for 147.0 firefox
+2026-02-25 11:52:22,581 - INFO - Get LATEST geckodriver version for 147.0 firefox
+2026-02-25 11:52:22,670 - INFO - Driver [/home/hafida/.wdm/drivers/geckodriver/linux64/v0.36.0/geckodriver] found in cache
+2026-02-25 11:52:28,059 - INFO - Navigation vers la page de connexion...
+2026-02-25 11:52:41,592 - INFO - ERREUR CONNEXION : Message: 
+
+2026-02-25 11:52:41,595 - INFO - Traceback (most recent call last):
+  File "/home/hafida/Bureau/connect4/scripts/bga_scraper.py", line 62, in connect
+    EC.visibility_of_element_located((By.CSS_SELECTOR, 'input[type="email"], input[name="email"]'))
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/support/wait.py", line 95, in until
+    raise TimeoutException(message, screen, stacktrace)
+selenium.common.exceptions.TimeoutException: Message: 
+
+
+2026-02-25 11:57:04,278 - INFO - Lancement de Firefox...
+2026-02-25 11:57:04,293 - INFO - ====== WebDriver manager ======
+2026-02-25 11:57:05,361 - INFO - Get LATEST geckodriver version for 147.0 firefox
+2026-02-25 11:57:05,602 - INFO - Get LATEST geckodriver version for 147.0 firefox
+2026-02-25 11:57:05,700 - INFO - Driver [/home/hafida/.wdm/drivers/geckodriver/linux64/v0.36.0/geckodriver] found in cache
+2026-02-25 11:57:10,795 - INFO - Navigation vers la page de connexion...
+2026-02-25 11:57:24,097 - INFO - ERREUR CONNEXION : Message: 
+Stacktrace:
+RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:8:8
+WebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:199:5
+NoSuchElementError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:552:5
+dom.find/</<@chrome://remote/content/shared/DOM.sys.mjs:136:16
+
+2026-02-25 11:57:24,098 - INFO - Traceback (most recent call last):
+  File "/home/hafida/Bureau/connect4/scripts/bga_scraper.py", line 59, in connect
+    EC.visibility_of_element_located((By.CSS_SELECTOR, 'input[name="username"]'))
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/support/wait.py", line 95, in until
+    raise TimeoutException(message, screen, stacktrace)
+selenium.common.exceptions.TimeoutException: Message: 
+Stacktrace:
+RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:8:8
+WebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:199:5
+NoSuchElementError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:552:5
+dom.find/</<@chrome://remote/content/shared/DOM.sys.mjs:136:16
+
+
+2026-02-25 12:09:52,912 - INFO - Lancement de Firefox...
+2026-02-25 12:09:52,921 - INFO - ====== WebDriver manager ======
+2026-02-25 12:09:53,729 - INFO - Get LATEST geckodriver version for 147.0 firefox
+2026-02-25 12:09:53,734 - INFO - ERREUR CONNEXION : Could not reach host. Are you offline?
+2026-02-25 12:09:53,748 - INFO - Traceback (most recent call last):
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/urllib3/connection.py", line 207, in _new_conn
+    socket_options=self.socket_options,
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/urllib3/util/connection.py", line 60, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+  File "/home/hafida/anaconda3/lib/python3.7/socket.py", line 752, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno -3] Temporary failure in name resolution
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/urllib3/connectionpool.py", line 803, in urlopen
+    **response_kw,
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/urllib3/connectionpool.py", line 492, in _make_request
+    raise new_e
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/urllib3/connectionpool.py", line 468, in _make_request
+    self._validate_conn(conn)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/urllib3/connectionpool.py", line 1097, in _validate_conn
+    conn.connect()
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/urllib3/connection.py", line 611, in connect
+    self.sock = sock = self._new_conn()
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/urllib3/connection.py", line 210, in _new_conn
+    raise NameResolutionError(self.host, self, e) from e
+urllib3.exceptions.NameResolutionError: <urllib3.connection.HTTPSConnection object at 0x7f3277b254d0>: Failed to resolve 'api.github.com' ([Errno -3] Temporary failure in name resolution)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/requests/adapters.py", line 497, in send
+    chunked=chunked,
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/urllib3/connectionpool.py", line 846, in urlopen
+    method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/urllib3/util/retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api.github.com', port=443): Max retries exceeded with url: /repos/mozilla/geckodriver/releases/latest (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3277b254d0>: Failed to resolve 'api.github.com' ([Errno -3] Temporary failure in name resolution)"))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/webdriver_manager/core/http.py", line 33, in get
+    url=url, verify=self._ssl_verify, stream=True, **kwargs)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/requests/api.py", line 73, in get
+    return request("get", url, params=params, **kwargs)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/requests/adapters.py", line 519, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='api.github.com', port=443): Max retries exceeded with url: /repos/mozilla/geckodriver/releases/latest (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f3277b254d0>: Failed to resolve 'api.github.com' ([Errno -3] Temporary failure in name resolution)"))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/hafida/Bureau/connect4/scripts/bga_scraper.py", line 51, in connect
+    service = Service(GeckoDriverManager().install())
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/webdriver_manager/firefox.py", line 39, in install
+    driver_path = self._get_driver_binary_path(self.driver)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/webdriver_manager/core/manager.py", line 35, in _get_driver_binary_path
+    binary_path = self._cache_manager.find_driver(driver)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/webdriver_manager/core/driver_cache.py", line 107, in find_driver
+    driver_version = self.get_cache_key_driver_version(driver)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/webdriver_manager/core/driver_cache.py", line 154, in get_cache_key_driver_version
+    return driver.get_driver_version_to_download()
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/webdriver_manager/core/driver.py", line 48, in get_driver_version_to_download
+    return self.get_latest_release_version()
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/webdriver_manager/drivers/firefox.py", line 31, in get_latest_release_version
+    headers=self.auth_header
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/webdriver_manager/core/http.py", line 35, in get
+    raise exceptions.ConnectionError(f"Could not reach host. Are you offline?")
+requests.exceptions.ConnectionError: Could not reach host. Are you offline?
+
+2026-02-25 12:12:05,113 - INFO - Lancement de Firefox...
+2026-02-25 12:12:05,122 - INFO - ERREUR CONNEXION : Message: Unable to locate or obtain driver for firefox; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/driver_location
+
+2026-02-25 12:12:05,124 - INFO - Traceback (most recent call last):
+  File "/home/hafida/Bureau/connect4/scripts/bga_scraper.py", line 53, in connect
+    self.driver = Firefox(service=service, options=options)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/firefox/webdriver.py", line 59, in __init__
+    self.service.path = DriverFinder.get_path(self.service, options)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/common/driver_finder.py", line 44, in get_path
+    raise NoSuchDriverException(f"Unable to locate or obtain driver for {options.capabilities['browserName']}")
+selenium.common.exceptions.NoSuchDriverException: Message: Unable to locate or obtain driver for firefox; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/driver_location
+
+
+2026-02-25 12:14:33,864 - INFO - Lancement de Firefox...
+2026-02-25 12:14:39,001 - INFO - Ouverture de la page de connexion BGA...
+2026-02-25 12:14:41,730 - INFO - En attente de connexion manuelle dans Firefox...
+2026-02-25 12:19:42,032 - INFO - ERREUR CONNEXION : Message: 
+Stacktrace:
+RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:8:8
+WebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:199:5
+NoSuchElementError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:552:5
+dom.find/</<@chrome://remote/content/shared/DOM.sys.mjs:136:16
+
+2026-02-25 12:19:42,038 - INFO - Traceback (most recent call last):
+  File "/home/hafida/Bureau/connect4/scripts/bga_scraper.py", line 63, in connect
+    EC.visibility_of_element_located((By.CSS_SELECTOR, 'div#account_menu'))
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/support/wait.py", line 95, in until
+    raise TimeoutException(message, screen, stacktrace)
+selenium.common.exceptions.TimeoutException: Message: 
+Stacktrace:
+RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:8:8
+WebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:199:5
+NoSuchElementError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:552:5
+dom.find/</<@chrome://remote/content/shared/DOM.sys.mjs:136:16
+
+
+2026-02-25 12:25:11,321 - INFO - Lancement de Firefox...
+2026-02-25 12:25:16,038 - INFO - Ouverture de la page de connexion BGA...
+2026-02-25 12:25:19,863 - INFO - En attente de connexion manuelle dans Firefox...
+2026-02-25 12:27:36,978 - INFO - ERREUR CONNEXION : Message: Browsing context has been discarded
+Stacktrace:
+RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:8:8
+WebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:199:5
+NoSuchWindowError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:747:5
+assert.that/<@chrome://remote/content/shared/webdriver/Assert.sys.mjs:559:13
+assert.open@chrome://remote/content/shared/webdriver/Assert.sys.mjs:147:4
+GeckoDriver.prototype.findElement@chrome://remote/content/marionette/driver.sys.mjs:1746:15
+despatch@chrome://remote/content/marionette/server.sys.mjs:318:40
+execute@chrome://remote/content/marionette/server.sys.mjs:289:16
+onPacket/<@chrome://remote/content/marionette/server.sys.mjs:262:20
+onPacket@chrome://remote/content/marionette/server.sys.mjs:263:9
+_onJSONObjectReady/<@chrome://remote/content/marionette/transport.sys.mjs:494:20
+ssi_onQuitApplicationGranted@resource:///modules/sessionstore/SessionStore.sys.mjs:2780:19
+ssi_observe@resource:///modules/sessionstore/SessionStore.sys.mjs:1533:14
+
+2026-02-25 12:27:37,001 - INFO - Traceback (most recent call last):
+  File "/home/hafida/Bureau/connect4/scripts/bga_scraper.py", line 63, in connect
+    )
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/support/wait.py", line 86, in until
+    value = method(self._driver)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/support/expected_conditions.py", line 152, in _predicate
+    return _element_if_visible(driver.find_element(*locator))
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/remote/webdriver.py", line 739, in find_element
+    return self.execute(Command.FIND_ELEMENT, {"using": by, "value": value})["value"]
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/remote/webdriver.py", line 345, in execute
+    self.error_handler.check_response(response)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/remote/errorhandler.py", line 229, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.NoSuchWindowException: Message: Browsing context has been discarded
+Stacktrace:
+RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:8:8
+WebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:199:5
+NoSuchWindowError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:747:5
+assert.that/<@chrome://remote/content/shared/webdriver/Assert.sys.mjs:559:13
+assert.open@chrome://remote/content/shared/webdriver/Assert.sys.mjs:147:4
+GeckoDriver.prototype.findElement@chrome://remote/content/marionette/driver.sys.mjs:1746:15
+despatch@chrome://remote/content/marionette/server.sys.mjs:318:40
+execute@chrome://remote/content/marionette/server.sys.mjs:289:16
+onPacket/<@chrome://remote/content/marionette/server.sys.mjs:262:20
+onPacket@chrome://remote/content/marionette/server.sys.mjs:263:9
+_onJSONObjectReady/<@chrome://remote/content/marionette/transport.sys.mjs:494:20
+ssi_onQuitApplicationGranted@resource:///modules/sessionstore/SessionStore.sys.mjs:2780:19
+ssi_observe@resource:///modules/sessionstore/SessionStore.sys.mjs:1533:14
+
+
+2026-02-25 12:28:00,577 - INFO - Lancement de Firefox...
+2026-02-25 12:28:05,048 - INFO - Ouverture de la page de connexion BGA...
+2026-02-25 12:28:09,340 - INFO - En attente de connexion manuelle...
+2026-02-25 12:28:55,588 - INFO - ERREUR CONNEXION : Message: WebDriver session does not exist, or is not active
+Stacktrace:
+RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:8:8
+WebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:199:5
+InvalidSessionIDError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:469:5
+assert.that/<@chrome://remote/content/shared/webdriver/Assert.sys.mjs:559:13
+assert.session@chrome://remote/content/shared/webdriver/Assert.sys.mjs:37:4
+despatch@chrome://remote/content/marionette/server.sys.mjs:315:19
+execute@chrome://remote/content/marionette/server.sys.mjs:289:16
+onPacket/<@chrome://remote/content/marionette/server.sys.mjs:262:20
+onPacket@chrome://remote/content/marionette/server.sys.mjs:263:9
+_onJSONObjectReady/<@chrome://remote/content/marionette/transport.sys.mjs:494:20
+
+2026-02-25 12:28:55,591 - INFO - Traceback (most recent call last):
+  File "/home/hafida/Bureau/connect4/scripts/bga_scraper.py", line 62, in connect
+    EC.visibility_of_element_located((By.CSS_SELECTOR, ".bga-player-menu__avatar, .bga-player-menu__button"))
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/support/wait.py", line 86, in until
+    value = method(self._driver)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/support/expected_conditions.py", line 152, in _predicate
+    return _element_if_visible(driver.find_element(*locator))
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/remote/webdriver.py", line 739, in find_element
+    return self.execute(Command.FIND_ELEMENT, {"using": by, "value": value})["value"]
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/remote/webdriver.py", line 345, in execute
+    self.error_handler.check_response(response)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/remote/errorhandler.py", line 229, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.InvalidSessionIdException: Message: WebDriver session does not exist, or is not active
+Stacktrace:
+RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:8:8
+WebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:199:5
+InvalidSessionIDError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:469:5
+assert.that/<@chrome://remote/content/shared/webdriver/Assert.sys.mjs:559:13
+assert.session@chrome://remote/content/shared/webdriver/Assert.sys.mjs:37:4
+despatch@chrome://remote/content/marionette/server.sys.mjs:315:19
+execute@chrome://remote/content/marionette/server.sys.mjs:289:16
+onPacket/<@chrome://remote/content/marionette/server.sys.mjs:262:20
+onPacket@chrome://remote/content/marionette/server.sys.mjs:263:9
+_onJSONObjectReady/<@chrome://remote/content/marionette/transport.sys.mjs:494:20
+
+
+2026-02-25 12:32:05,882 - INFO - Lancement de Firefox...
+2026-02-25 12:32:10,401 - INFO - Ouverture de la page de connexion BGA...
+2026-02-25 12:32:13,935 - INFO - En attente de connexion manuelle...
+2026-02-25 12:32:13,974 - INFO - Connexion détectée ! user_id = -865852383
+2026-02-25 12:32:13,974 - INFO - Redirection vers la page Puissance 4...
+2026-02-25 12:32:43,336 - INFO - Navigation vers les stats du joueur 94154229 (Puissance 4)...
+2026-02-25 12:35:25,436 - INFO - Lancement de Firefox...
+2026-02-25 12:35:33,115 - INFO - Ouverture de la page de connexion BGA...
+2026-02-25 12:35:33,116 - INFO - En attente de connexion manuelle...
+2026-02-25 12:35:33,194 - INFO - Connexion détectée ! user_id = -998695198
+2026-02-25 12:35:33,195 - INFO - Redirection vers la page Puissance 4...
+2026-02-25 12:35:58,738 - INFO - Navigation vers les stats du joueur 94154229 (Puissance 4)...
+2026-02-25 12:38:49,400 - INFO - Lancement de Firefox...
+2026-02-25 12:38:54,236 - INFO - Ouverture de la page de connexion BGA...
+2026-02-25 12:38:54,236 - INFO - En attente de connexion manuelle...
+2026-02-25 12:38:59,950 - INFO - ERREUR CONNEXION : Message: WebDriver session does not exist, or is not active
+Stacktrace:
+RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:8:8
+WebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:199:5
+InvalidSessionIDError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:469:5
+assert.that/<@chrome://remote/content/shared/webdriver/Assert.sys.mjs:559:13
+assert.session@chrome://remote/content/shared/webdriver/Assert.sys.mjs:37:4
+despatch@chrome://remote/content/marionette/server.sys.mjs:315:19
+execute@chrome://remote/content/marionette/server.sys.mjs:289:16
+onPacket/<@chrome://remote/content/marionette/server.sys.mjs:262:20
+onPacket@chrome://remote/content/marionette/server.sys.mjs:263:9
+_onJSONObjectReady/<@chrome://remote/content/marionette/transport.sys.mjs:494:20
+
+2026-02-25 12:38:59,952 - INFO - Traceback (most recent call last):
+  File "/home/hafida/Bureau/connect4/scripts/bga_scraper.py", line 56, in connect
+    if not self.driver.current_url.startswith(login_url):
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/remote/webdriver.py", line 435, in current_url
+    return self.execute(Command.GET_CURRENT_URL)["value"]
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/remote/webdriver.py", line 345, in execute
+    self.error_handler.check_response(response)
+  File "/home/hafida/anaconda3/lib/python3.7/site-packages/selenium/webdriver/remote/errorhandler.py", line 229, in check_response
+    raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.InvalidSessionIdException: Message: WebDriver session does not exist, or is not active
+Stacktrace:
+RemoteError@chrome://remote/content/shared/RemoteError.sys.mjs:8:8
+WebDriverError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:199:5
+InvalidSessionIDError@chrome://remote/content/shared/webdriver/Errors.sys.mjs:469:5
+assert.that/<@chrome://remote/content/shared/webdriver/Assert.sys.mjs:559:13
+assert.session@chrome://remote/content/shared/webdriver/Assert.sys.mjs:37:4
+despatch@chrome://remote/content/marionette/server.sys.mjs:315:19
+execute@chrome://remote/content/marionette/server.sys.mjs:289:16
+onPacket/<@chrome://remote/content/marionette/server.sys.mjs:262:20
+onPacket@chrome://remote/content/marionette/server.sys.mjs:263:9
+_onJSONObjectReady/<@chrome://remote/content/marionette/transport.sys.mjs:494:20
+
+

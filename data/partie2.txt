@@ -1,0 +1,56 @@
+
+Historique de la partie
+Coup 3 : 11/02/2026 13:35:01
+arkitsa place un pion dans la colonne 5
+Coup 4 : 13:35:03
+arkitsa place un pion dans la colonne 4
+Coup 5 : 13:35:05
+arkitsa place un pion dans la colonne 5
+Coup 6 : 13:35:07
+kentino a inversé les couleurs
+arkitsa joue maintenant en Jaune !
+kentino joue maintenant en Rouge !
+Coup 7 : 13:35:10
+arkitsa place un pion dans la colonne 5
+Coup 8 : 13:35:12
+kentino place un pion dans la colonne 5
+Coup 9 : 13:35:14
+arkitsa place un pion dans la colonne 4
+Coup 10 : 13:35:15
+kentino place un pion dans la colonne 4
+Coup 11 : 13:35:18
+arkitsa place un pion dans la colonne 3
+Coup 12 : 13:35:24
+kentino place un pion dans la colonne 4
+Coup 13 : 13:35:31
+arkitsa place un pion dans la colonne 6
+Coup 14 : 13:35:36
+kentino place un pion dans la colonne 4
+Coup 15 : 13:35:38
+arkitsa place un pion dans la colonne 4
+Coup 16 : 13:35:43
+kentino place un pion dans la colonne 5
+Coup 17 : 13:35:47
+arkitsa place un pion dans la colonne 3
+Coup 18 : 13:35:54
+kentino place un pion dans la colonne 3
+Coup 19 : 13:36:03
+arkitsa place un pion dans la colonne 1
+Coup 20 : 13:36:04
+kentino place un pion dans la colonne 2
+Coup 21 : 13:36:07
+arkitsa place un pion dans la colonne 2
+Coup 22 : 13:36:10
+kentino place un pion dans la colonne 1
+Coup 23 : 13:36:13
+arkitsa place un pion dans la colonne 2
+Coup 24 : 13:36:19
+kentino place un pion dans la colonne 3
+Coup 25 : 13:36:25
+arkitsa place un pion dans la colonne 2
+Coup 26 : 13:36:27
+kentino place un pion dans la colonne 2
+kentino a aligné quatre pions !
+Fin de la partie
+
+

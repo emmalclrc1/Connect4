@@ -1,0 +1,227 @@
+1772016303210	geckodriver	INFO	Listening on 127.0.0.1:40695
+1772016303968	mozrunner::runner	INFO	Running command: MOZ_CRASHREPORTER="1" MOZ_CRASHREPORTER_NO_REPORT="1" MOZ_CRASHREPORTER_SHUTDOWN="1" "/usr/bin/firefox" "--m ... te" "--remote-debugging-port" "60353" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "/tmp/rust_mozprofileVhmKwq"
+Gtk-Message: 11:45:04.214: Not loading module "atk-bridge": The functionality is provided by GTK natively. Please try to not load it.
+1772016742692	geckodriver	INFO	Listening on 127.0.0.1:34427
+1772016743191	mozrunner::runner	INFO	Running command: MOZ_CRASHREPORTER="1" MOZ_CRASHREPORTER_NO_REPORT="1" MOZ_CRASHREPORTER_SHUTDOWN="1" "/usr/bin/firefox-esr"  ... te" "--remote-debugging-port" "53625" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "/tmp/rust_mozprofile9JUwUV"
+console.warn: services.settings: Ignoring preference override of remote settings server
+console.warn: services.settings: Allow by setting MOZ_REMOTE_SETTINGS_DEVTOOLS=1 in the environment
+1772016744107	Marionette	INFO	Marionette enabled
+1772016744745	Marionette	INFO	Listening on port 46541
+WebDriver BiDi listening on ws://127.0.0.1:53625
+Read port: 46541
+1772016744902	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+console.warn: RSLoader: Recipe new-tab-14802025121163751-to-release-146 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14802025121163751-to-release-14702 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14912026012151415-to-beta not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14912026012151415-to-release-14703 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+1772016968225	Marionette	INFO	Stopped listening on port 46541
+console.error: "Failed to fetch https://ads.mozilla.org/v1/delete_user:" "NetworkError when attempting to fetch resource."
+console.warn: TopSitesFeed: Failed to fetch data from MARS server: NetworkError when attempting to fetch resource.
+1772017025703	geckodriver	INFO	Listening on 127.0.0.1:47691
+1772017026214	mozrunner::runner	INFO	Running command: MOZ_CRASHREPORTER="1" MOZ_CRASHREPORTER_NO_REPORT="1" MOZ_CRASHREPORTER_SHUTDOWN="1" "/usr/bin/firefox-esr"  ... te" "--remote-debugging-port" "57053" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "/tmp/rust_mozprofileEsZFKI"
+console.warn: services.settings: Ignoring preference override of remote settings server
+console.warn: services.settings: Allow by setting MOZ_REMOTE_SETTINGS_DEVTOOLS=1 in the environment
+1772017027388	Marionette	INFO	Marionette enabled
+1772017028057	Marionette	INFO	Listening on port 41309
+WebDriver BiDi listening on ws://127.0.0.1:57053
+Read port: 41309
+1772017028260	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+console.warn: RSLoader: Recipe new-tab-14802025121163751-to-release-146 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14802025121163751-to-release-14702 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14912026012151415-to-beta not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14912026012151415-to-release-14703 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://fr.boardgamearena.com."
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://fr.boardgamearena.com."
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://fr.boardgamearena.com."
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://fr.boardgamearena.com."
+libva info: VA-API version 1.14.0
+libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so
+libva info: Found init function __vaDriverInit_1_14
+libva error: /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so init failed
+libva info: va_openDriver() returns 1
+libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/i965_drv_video.so
+libva info: Found init function __vaDriverInit_1_10
+libva info: va_openDriver() returns 0
+JavaScript warning: https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js, line 2: Script terminated by timeout at:
+M@https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js:2:59423
+sendPageview@https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js:2:236996
+gr/<@https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js:2:325170
+
+1772017893477	Marionette	INFO	Stopped listening on port 41309
+console.error: "Failed to fetch https://ads.mozilla.org/v1/delete_user:" "NetworkError when attempting to fetch resource."
+console.warn: TopSitesFeed: Failed to fetch data from MARS server: NetworkError when attempting to fetch resource.
+1772018073960	geckodriver	INFO	Listening on 127.0.0.1:37133
+1772018074402	mozrunner::runner	INFO	Running command: MOZ_CRASHREPORTER="1" MOZ_CRASHREPORTER_NO_REPORT="1" MOZ_CRASHREPORTER_SHUTDOWN="1" MOZ_NO_REMOTE="1" "/usr ... te" "--remote-debugging-port" "32971" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "/tmp/rust_mozprofile4WTj5Y"
+console.warn: services.settings: Ignoring preference override of remote settings server
+console.warn: services.settings: Allow by setting MOZ_REMOTE_SETTINGS_DEVTOOLS=1 in the environment
+1772018075298	Marionette	INFO	Marionette enabled
+1772018075896	Marionette	INFO	Listening on port 44635
+Read port: 44635
+WebDriver BiDi listening on ws://127.0.0.1:32971
+1772018076007	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+console.warn: RSLoader: Recipe new-tab-14802025121163751-to-release-146 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14802025121163751-to-release-14702 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14912026012151415-to-beta not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14912026012151415-to-release-14703 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://fr.boardgamearena.com."
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://fr.boardgamearena.com."
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://fr.boardgamearena.com."
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://fr.boardgamearena.com."
+libva info: VA-API version 1.14.0
+libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so
+libva info: Found init function __vaDriverInit_1_14
+libva error: /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so init failed
+libva info: va_openDriver() returns 1
+libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/i965_drv_video.so
+libva info: Found init function __vaDriverInit_1_10
+libva info: va_openDriver() returns 0
+JavaScript error: , line 0: NotAllowedError: The play method is not allowed by the user agent or the platform in the current context, possibly because the user denied permission.
+JavaScript error: , line 0: NotFoundError: No such JSProcessActor 'DevToolsProcess'
+JavaScript error: , line 0: NotFoundError: No such JSProcessActor 'DevToolsProcess'
+JavaScript error: , line 0: NotFoundError: No such JSProcessActor 'DevToolsProcess'
+1772018711371	geckodriver	INFO	Listening on 127.0.0.1:37711
+1772018711851	mozrunner::runner	INFO	Running command: MOZ_CRASHREPORTER="1" MOZ_CRASHREPORTER_NO_REPORT="1" MOZ_CRASHREPORTER_SHUTDOWN="1" MOZ_NO_REMOTE="1" "/usr ... te" "--remote-debugging-port" "53063" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "/tmp/rust_mozprofileJEzlf0"
+console.warn: services.settings: Ignoring preference override of remote settings server
+console.warn: services.settings: Allow by setting MOZ_REMOTE_SETTINGS_DEVTOOLS=1 in the environment
+1772018712700	Marionette	INFO	Marionette enabled
+1772018713500	Marionette	INFO	Listening on port 34515
+WebDriver BiDi listening on ws://127.0.0.1:53063
+Read port: 34515
+1772018713692	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+console.warn: RSLoader: Recipe new-tab-14802025121163751-to-release-146 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14802025121163751-to-release-14702 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14912026012151415-to-beta not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14912026012151415-to-release-14703 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://fr.boardgamearena.com."
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://fr.boardgamearena.com."
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://fr.boardgamearena.com."
+libva info: VA-API version 1.14.0
+libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so
+libva info: Found init function __vaDriverInit_1_14
+libva error: /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so init failed
+libva info: va_openDriver() returns 1
+libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/i965_drv_video.so
+libva info: Found init function __vaDriverInit_1_10
+libva info: va_openDriver() returns 0
+JavaScript warning: https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js, line 2: Script terminated by timeout at:
+M@https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js:2:59423
+sendPageview@https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js:2:236996
+gr/<@https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js:2:325170
+
+1772018751993	Marionette	INFO	Stopped listening on port 44635
+console.error: "Failed to fetch https://ads.mozilla.org/v1/delete_user:" "NetworkError when attempting to fetch resource."
+console.warn: TopSitesFeed: Failed to fetch data from MARS server: NetworkError when attempting to fetch resource.
+JavaScript warning: https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js, line 2: Script terminated by timeout at:
+M@https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js:2:59423
+sendPageview@https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js:2:236996
+gr/<@https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js:2:325170
+
+1772018856891	Marionette	INFO	Stopped listening on port 34515
+console.error: "Failed to fetch https://ads.mozilla.org/v1/delete_user:" "NetworkError when attempting to fetch resource."
+console.warn: TopSitesFeed: Failed to fetch data from MARS server: NetworkError when attempting to fetch resource.
+1772018880589	geckodriver	INFO	Listening on 127.0.0.1:54761
+1772018880597	mozrunner::runner	INFO	Running command: MOZ_CRASHREPORTER="1" MOZ_CRASHREPORTER_NO_REPORT="1" MOZ_CRASHREPORTER_SHUTDOWN="1" MOZ_NO_REMOTE="1" "/usr ... te" "--remote-debugging-port" "58033" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "/tmp/rust_mozprofile38ZOhz"
+console.warn: services.settings: Ignoring preference override of remote settings server
+console.warn: services.settings: Allow by setting MOZ_REMOTE_SETTINGS_DEVTOOLS=1 in the environment
+1772018881485	Marionette	INFO	Marionette enabled
+1772018882134	Marionette	INFO	Listening on port 40105
+WebDriver BiDi listening on ws://127.0.0.1:58033
+Read port: 40105
+1772018882287	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+console.warn: RSLoader: Recipe new-tab-14802025121163751-to-release-146 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14802025121163751-to-release-14702 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14912026012151415-to-beta not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14912026012151415-to-release-14703 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://fr.boardgamearena.com."
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://fr.boardgamearena.com."
+libva info: VA-API version 1.14.0
+libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so
+libva info: Found init function __vaDriverInit_1_14
+libva error: /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so init failed
+libva info: va_openDriver() returns 1
+libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/i965_drv_video.so
+libva info: Found init function __vaDriverInit_1_10
+libva info: va_openDriver() returns 0
+JavaScript warning: https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js, line 2: Script terminated by timeout at:
+M@https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js:2:59423
+sendPageview@https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js:2:236996
+gr/<@https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js:2:325170
+
+1772018934973	Marionette	INFO	Stopped listening on port 40105
+console.error: "Failed to fetch https://ads.mozilla.org/v1/delete_user:" "NetworkError when attempting to fetch resource."
+console.warn: TopSitesFeed: Failed to fetch data from MARS server: NetworkError when attempting to fetch resource.
+1772019125895	geckodriver	INFO	Listening on 127.0.0.1:45027
+1772019126404	mozrunner::runner	INFO	Running command: MOZ_CRASHREPORTER="1" MOZ_CRASHREPORTER_NO_REPORT="1" MOZ_CRASHREPORTER_SHUTDOWN="1" MOZ_NO_REMOTE="1" "/usr ... te" "--remote-debugging-port" "55591" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "/tmp/rust_mozprofileKfGAeQ"
+console.warn: services.settings: Ignoring preference override of remote settings server
+console.warn: services.settings: Allow by setting MOZ_REMOTE_SETTINGS_DEVTOOLS=1 in the environment
+1772019127175	Marionette	INFO	Marionette enabled
+1772019127822	Marionette	INFO	Listening on port 43407
+WebDriver BiDi listening on ws://127.0.0.1:55591
+Read port: 43407
+1772019128010	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+console.warn: RSLoader: Recipe new-tab-14802025121163751-to-release-146 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14802025121163751-to-release-14702 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14912026012151415-to-beta not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14912026012151415-to-release-14703 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+libva info: VA-API version 1.14.0
+libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so
+libva info: Found init function __vaDriverInit_1_14
+libva error: /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so init failed
+libva info: va_openDriver() returns 1
+libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/i965_drv_video.so
+libva info: Found init function __vaDriverInit_1_10
+libva info: va_openDriver() returns 0
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://en.boardgamearena.com."
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://en.boardgamearena.com."
+JavaScript warning: https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js, line 2: Script terminated by timeout at:
+M@https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js:2:59423
+sendPageview@https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js:2:236996
+gr/<@https://sdk.privacy-center.org/sdk/22c557d3f160d1f486e76399e6268c0c916d6573/modern/sdk.22c557d3f160d1f486e76399e6268c0c916d6573.js:2:325170
+
+1772019308845	Marionette	INFO	Stopped listening on port 43407
+console.error: "Failed to fetch https://ads.mozilla.org/v1/delete_user:" "NetworkError when attempting to fetch resource."
+console.warn: TopSitesFeed: Failed to fetch data from MARS server: NetworkError when attempting to fetch resource.
+1772019325449	geckodriver	INFO	Listening on 127.0.0.1:53047
+1772019325456	mozrunner::runner	INFO	Running command: MOZ_CRASHREPORTER="1" MOZ_CRASHREPORTER_NO_REPORT="1" MOZ_CRASHREPORTER_SHUTDOWN="1" MOZ_NO_REMOTE="1" "/usr ... te" "--remote-debugging-port" "56823" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "/tmp/rust_mozprofile5tx6ur"
+console.warn: services.settings: Ignoring preference override of remote settings server
+console.warn: services.settings: Allow by setting MOZ_REMOTE_SETTINGS_DEVTOOLS=1 in the environment
+1772019326423	Marionette	INFO	Marionette enabled
+1772019327169	Marionette	INFO	Listening on port 41719
+WebDriver BiDi listening on ws://127.0.0.1:56823
+Read port: 41719
+1772019327397	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+console.warn: RSLoader: Recipe new-tab-14802025121163751-to-release-146 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14802025121163751-to-release-14702 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14912026012151415-to-beta not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14912026012151415-to-release-14703 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+libva info: VA-API version 1.14.0
+libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so
+libva info: Found init function __vaDriverInit_1_14
+libva error: /usr/lib/x86_64-linux-gnu/dri/iHD_drv_video.so init failed
+libva info: va_openDriver() returns 1
+libva info: Trying to open /usr/lib/x86_64-linux-gnu/dri/i965_drv_video.so
+libva info: Found init function __vaDriverInit_1_10
+libva info: va_openDriver() returns 0
+1772019520441	Marionette	INFO	Stopped listening on port 41719
+console.error: "Failed to fetch https://ads.mozilla.org/v1/delete_user:" "NetworkError when attempting to fetch resource."
+console.warn: TopSitesFeed: Failed to fetch data from MARS server: NetworkError when attempting to fetch resource.
+1772019529413	geckodriver	INFO	Listening on 127.0.0.1:44835
+1772019529922	mozrunner::runner	INFO	Running command: MOZ_CRASHREPORTER="1" MOZ_CRASHREPORTER_NO_REPORT="1" MOZ_CRASHREPORTER_SHUTDOWN="1" MOZ_NO_REMOTE="1" "/usr ... te" "--remote-debugging-port" "50587" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "/tmp/rust_mozprofileCbM66u"
+console.warn: services.settings: Ignoring preference override of remote settings server
+console.warn: services.settings: Allow by setting MOZ_REMOTE_SETTINGS_DEVTOOLS=1 in the environment
+1772019530765	Marionette	INFO	Marionette enabled
+1772019531440	Marionette	INFO	Listening on port 35615
+WebDriver BiDi listening on ws://127.0.0.1:50587
+Read port: 35615
+1772019531618	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+console.warn: RSLoader: Recipe new-tab-14802025121163751-to-release-146 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14802025121163751-to-release-14702 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14912026012151415-to-beta not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+console.warn: RSLoader: Recipe new-tab-14912026012151415-to-release-14703 not returned from collection nimbus-secure-experiments because it contains feature newtabTrainhopAddon, which is disallowed for that collection.
+1772019539865	Marionette	INFO	Stopped listening on port 35615
+console.error: "Failed to fetch https://ads.mozilla.org/v1/delete_user:" "NetworkError when attempting to fetch resource."
+console.warn: TopSitesFeed: Failed to fetch data from MARS server: NetworkError when attempting to fetch resource.
+1772026623724	geckodriver	INFO	Listening on 127.0.0.1:42671
+1772026624504	mozrunner::runner	INFO	Running command: MOZ_CRASHREPORTER="1" MOZ_CRASHREPORTER_NO_REPORT="1" MOZ_CRASHREPORTER_SHUTDOWN="1" "/usr/bin/firefox" "--m ... ss" "--remote-debugging-port" "40927" "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "/tmp/rust_mozprofilexXRpka"
+*** You are running in headless mode.
+Gtk-Message: 14:37:04.750: Not loading module "atk-bridge": The functionality is provided by GTK natively. Please try to not load it.
