@@ -121,6 +121,13 @@ class ViewerApp(tk.Frame):
         return [[VIDE for _ in range(COLONNES)] for _ in range(LIGNES)]
 
     def appliquer_coup(self, plateau, joueur, colonne):
+        if len(plateau[0]) == 9 and 1 <= colonne <= 9:
+            colonne -=1
+        
+        if colonne < 0 or colonne >= len(plateau[0]):
+             print(f"[VIEWER] Colonne invalide ignorée: {colonne}")
+             return
+
         for l in range(LIGNES - 1, -1, -1):
             if plateau[l][colonne] == VIDE:
                 plateau[l][colonne] = joueur

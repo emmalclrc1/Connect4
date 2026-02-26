@@ -127,6 +127,16 @@ def move(game_id: int, col: int):
     jouer_coup(plateau, col, joueur)
     game["coups"].append(col)
     
+    sequence = ",".join(str(c)) for c in game["coups"])
+    
+    cur = CONN_PG.cursor()
+    cur.execute(
+        "UPDATE parties SET sequence=%s WHERE id_partie=%s",
+        (sequence, game["id_partie_pg"])
+    )
+    CONN_PG.commit()
+    cur.close()
+    
     db_ajouter_coup(
         CONN_PG,
         game["id_partie_pg"],
@@ -165,12 +175,22 @@ def move(game_id: int, col: int):
         jouer_coup(plateau, col_ia, ia_couleur)
         game["coups"].append(col_ia)
         
+        sequence = ",".join(str(c)) for c in game["coups"])
+    
+        cur = CONN_PG.cursor()
+        cur.execute(
+            "UPDATE parties SET sequence=%s WHERE id_partie=%s",
+            (sequence, game["id_partie_pg"])
+        )
+        CONN_PG.commit()
+        cur.close()
+        
         db_ajouter_coup(
             CONN_PG,
             game["id_partie_pg"],
             len(game["coups"]),
-            joueur,
-            col
+            ia_joueur,
+            col_ia
         ) 
 
         win_pos = verifier_victoire(plateau, ia_couleur)

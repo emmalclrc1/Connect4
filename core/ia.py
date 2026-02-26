@@ -33,7 +33,7 @@ def coup_bga(plateau, coups_deja_joues, connexion_pg, joueur):
         # Matching correct
         cur.execute(
             """
-            SELECT sequence, confiance FROM parties
+            SELECT sequence, confiance, gagnant FROM parties
             WHERE sequence IS NOT NULL
               AND sequence <> ''
               AND sequence LIKE %s;
@@ -44,7 +44,7 @@ def coup_bga(plateau, coups_deja_joues, connexion_pg, joueur):
         # Toutes les parties valides
         cur.execute(
             """
-            SELECT sequence, confiance FROM parties
+            SELECT sequence, confiance, gagnant FROM parties
             WHERE sequence IS NOT NULL
               AND sequence <> '';
             """
@@ -57,12 +57,18 @@ def coup_bga(plateau, coups_deja_joues, connexion_pg, joueur):
         return col
 
     stats = {}
-    for (seq, conf) in rows:
+    for (seq, conf, gagnant) in rows:
         seq_list = [int(x) for x in seq.split(",") if x != ""]
         if len(seq_list) > len(coups_deja_joues):
             next_col = seq_list[len(coups_deja_joues)]
             if 0 <= next_col < COLONNES and coup_valide(plateau, next_col):
                 poids = max(1, conf)  # confiance = poids
+                #bonus si la partie a ete gagnee par joueur
+                if gagnant == joueur:
+                    poids *= 3
+                elif gagnant is not None:
+                    poids *= 0.3
+                    
                 stats[next_col] = stats.get(next_col, 0) + poids
 
     if not stats:

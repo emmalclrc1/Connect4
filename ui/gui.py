@@ -42,6 +42,9 @@ from core.sauvegarde import (
 # ============================================================
 
 def importer_partie_bga(conn, table_id, moves):
+    if not moves:
+        return None
+    
     # Vérifier si déjà importée
     cur = conn.cursor()
     cur.execute("SELECT id_partie FROM parties WHERE nom=%s", (f"BGA_{table_id}",))
@@ -62,17 +65,23 @@ def importer_partie_bga(conn, table_id, moves):
     cur.close()
 
     # Insérer les coups
-    joueur = 'R'
-    for i, col in enumerate(moves):
+    for i, (couleur, col_bga) in enumerate(moves):
+        col0 = col_bga - 1  # ✅ conversion BGA 1..9 -> interne 0..8
+        if col0 < 0 or col0 >= 9:
+            continue 
+    
         cur = conn.cursor()
         cur.execute("""
             INSERT INTO coups (id_partie, numero_coup, joueur, colonne)
             VALUES (%s, %s, %s, %s)
         """, (id_partie, i+1, joueur, col))
         cur.close()
-
-        joueur = 'J' if joueur == 'R' else 'R'
-
+    
+    valid = [(couleur, col) for (couleur, col) in moves if 1 <= col <= 9]
+    if not valid:
+        return None
+    moves = valid
+    
     conn.commit()
     return id_partie
 
@@ -143,7 +152,9 @@ class Puissance4GUI(tk.Frame):
             text_logs.see("end")
             win.update()
 
-        scraper = BGAScraper()
+        scraper = BGAScraper(headless=False)
+        log("Selenium lancé (headless=False).")
+        log(f"Connecté à BGA ? {scraper.is_logged_in()}")
 
         def charger_parties():
             listbox.delete(0, "end")
@@ -169,11 +180,17 @@ class Puissance4GUI(tk.Frame):
                 tid = int(text.split()[1])
 
                 log(f"Scraping table {tid}...")
-                moves = scraper.get_moves_from_table(tid)
-
-                log(f"Import dans la base...")
+                moves = scraper.get_moves_with_colors_from_table(tid)
+                
+                if not moves:
+                    log("⚠️ Import annulé: replay inaccessible / limite atteinte / aucun coup.")
+                    continue
+                
+                if moves is None :
+                    log("⚠️ Partie ignorée: couleurs non déterminées (swap ou logs incomplets).")
+                    continue
+                log(f"{len(moves)} coups trouvés.")
                 importer_partie_bga(conn, tid, moves)
-
                 log(f"✔ Partie {tid} importée.")
 
             conn.close()
@@ -181,6 +198,12 @@ class Puissance4GUI(tk.Frame):
 
         tk.Button(win, text="Charger les parties", command=charger_parties).pack(pady=5)
         tk.Button(win, text="Importer la sélection", command=importer_selection).pack(pady=5)
+          
+        def ouvrir_bga_login():
+            scraper.driver.get("https://boardgamearena.com/")
+            log("Ouvre BGA. Connecte-toi dans la fenêtre Chrome si nécessaire, puis re-clique 'Charger les parties'.")
+        
+        tk.Button(win, text="Ouvrir BGA (login)", command=ouvrir_bga_login).pack(pady=5)
 
     # ============================================================
     #  IA PRÉDICTIVE
