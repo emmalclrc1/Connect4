@@ -1,81 +1,190 @@
-:root { color-scheme: dark; }
+:root{
+--bg: #0b1220;
+--panel: #121a2b;
+--text: #e9eefc;
+--muted: #a9b4d0;
+--shadow: rgba(0,0,0,.35);
+--red: #ff4d4d;
+--yellow: #ffd74a;
+--empty: #17213d;
+--hover: rgba(255,255,255,.10);
+}
+
+*{ box-sizing:border-box; }
 
 body{
-margin:0;
-font-family: Arial, sans-serif;
-background:#0b1220;
-color:#e5e7eb;
+margin:0; min-height:100vh;
+background: radial-gradient(1200px 700px at 30% 20%, #15214a 0%, var(--bg) 55%);
+color: var(--text);
+font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial;
+display:flex; align-items:center; justify-content:center;
+padding:24px;
 }
 
-.container{
-max-width: 900px;
-margin: 0 auto;
-padding: 16px;
+.app{
+width:min(980px, 100%);
+display:grid;
+grid-template-columns: 320px 1fr;
+gap:18px;
 }
+
+.card{
+background: rgba(18,26,43,.9);
+border: 1px solid rgba(255,255,255,.08);
+border-radius:16px;
+box-shadow: 0 18px 45px var(--shadow);
+overflow:hidden;
+}
+
+.sidebar{
+padding:18px;
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+h1{ font-size:20px; margin:0; }
+
+.sub{ color: var(--muted); font-size:13px; line-height:1.4; }
+
+label{ font-size:12px; color: var(--muted); display:block; margin-bottom:6px; }
+
+select, button{
+width:100%;
+border-radius:12px;
+border:1px solid rgba(255,255,255,.10);
+background: rgba(255,255,255,.06);
+color: var(--text);
+padding:10px 12px;
+font-size:14px;
+outline:none;
+}
+
+button{
+cursor:pointer;
+background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
+}
+button:hover{ background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.08)); }
+button:active{ transform: translateY(1px); }
 
 .status{
-margin: 12px 0;
-padding: 10px 12px;
-background: rgba(255,255,255,0.05);
-border-radius: 12px;
+padding:12px;
+border-radius:12px;
+border:1px solid rgba(255,255,255,.10);
+background: rgba(0,0,0,.18);
+min-height:46px;
+display:flex;
+align-items:center;
+gap:10px;
 }
 
-button, select{
-width: 100%;
-padding: 10px 12px;
-border-radius: 10px;
-border: 1px solid rgba(255,255,255,0.15);
-background: rgba(255,255,255,0.06);
-color: #e5e7eb;
+.pill{
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:6px 10px;
+border-radius:999px;
+border:1px solid rgba(255,255,255,.12);
+background: rgba(255,255,255,.06);
+font-size:12px;
+color: var(--muted);
 }
+
+.dot{
+width:10px; height:10px; border-radius:999px;
+background: var(--empty);
+box-shadow: inset 0 0 0 2px rgba(0,0,0,.25);
+}
+.dot.red{ background: var(--red); }
+.dot.yellow{ background: var(--yellow); }
 
 /* ===== Plateau ===== */
-.boardwrap{
-margin-top: 14px;
-background: rgba(255,255,255,0.05);
-border-radius: 16px;
-padding: 12px;
+.boardWrap{
+padding:18px;
+display:flex;
+flex-direction:column;
+gap:10px;
+align-items:center;
+justify-content:center;
 }
 
-/* le plateau doit rester carré */
+.boardTop{
+width: min(92vw, 620px);
+display:grid;
+grid-template-columns: repeat(9, 1fr);
+gap:10px;
+}
+
+.dropBtn{
+height:44px;
+border-radius:12px;
+border:1px solid rgba(255,255,255,.10);
+background: rgba(255,255,255,.06);
+color: var(--text);
+cursor:pointer;
+font-weight:600;
+}
+.dropBtn:hover{ background: var(--hover); }
+.dropBtn:disabled{ opacity:.35; cursor:not-allowed; }
+
 .board{
-width: 100%;
-max-width: 720px; /* limite sur desktop */
-margin: 0 auto;
-aspect-ratio: 1 / 1; /* carré */
-display: grid;
+width: min(92vw, 620px); /* ✅ grand sur mobile */
+aspect-ratio: 1 / 1;
+background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+border: 1px solid rgba(255,255,255,.10);
+border-radius:18px;
+padding:14px;
+box-shadow: inset 0 0 0 1px rgba(0,0,0,.35);
+}
+
+#grid{
+width:100%;
+height:100%;
+display:grid;
 grid-template-columns: repeat(9, 1fr);
 grid-template-rows: repeat(9, 1fr);
-gap: 8px;
+gap:10px;
 }
 
-@media (max-width: 600xp){
-  .board{
-    max-width: 100%;
-  }
-}
-
-/* chaque cellule carrée et visible */
 .cell{
-aspect-ratio: 1 / 1;
-border-radius: 12px;
-background: rgba(255,255,255,0.10);
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 22px;
-cursor: pointer;
-user-select:none;
+background: rgba(0,0,0,.20);
+border-radius:999px;
+border:1px solid rgba(255,255,255,.10);
+display:flex;
+align-items:center;
+justify-content:center;
+position:relative;
+overflow:hidden;
 }
 
-.cell:hover{ background: rgba(255,255,255,0.16); }
+.piece{
+width:100%;
+height:100%;
+border-radius:999px;
+transform: translateY(-2px);
+box-shadow: inset 0 0 0 2px rgba(0,0,0,.25), 0 8px 14px rgba(0,0,0,.25);
+background: var(--empty);
+}
+.piece.red{ background: var(--red); }
+.piece.yellow{ background: var(--yellow); }
 
-/* jetons (si tu utilises R/J en texte) */
-.cell.R{ background: rgba(239, 68, 68, 0.35); }
-.cell.J{ background: rgba(234, 179, 8, 0.35); }
+.hintCol{
+outline: 2px solid rgba(255,255,255,.14);
+background: rgba(255,255,255,.06);
+}
 
-/* sur petit écran, réduire un peu l’espace */
+.cell.win{
+outline: 3px solid rgba(0, 255, 170, .55);
+box-shadow: 0 0 0 4px rgba(0, 255, 170, .18) inset;
+}
+.cell.win .piece{
+filter: brightness(1.08);
+}
+
+@media (max-width: 900px){
+.app{ grid-template-columns: 1fr; }
+}
 @media (max-width: 420px){
-.board{ gap: 6px; }
-.cell{ border-radius: 10px; font-size: 18px; }
+#grid{ gap: 7px; }
+.boardTop{ gap: 7px; }
 }
