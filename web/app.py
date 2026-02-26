@@ -19,7 +19,11 @@ from core.modele import (
 app = FastAPI()
 
 # Static + page HTML
-app.mount("/static", StaticFiles(directory="web/static"), name="static")
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent 
+
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 # Connexion PostgreSQL (local)
 CONN_PG = db_connexion()
@@ -35,8 +39,7 @@ def root():
 
 @app.get("/play", response_class=HTMLResponse)
 def play_page():
-    with open("web/templates/index.html", "r", encoding="utf-8") as f:
-        return f.read()
+    return (BASE_DIR / "templates" / "index.html").read_text(encoding="utf-8")
 
 
 @app.post("/new-game")
