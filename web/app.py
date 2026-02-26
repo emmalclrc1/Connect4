@@ -127,7 +127,7 @@ def move(game_id: int, col: int):
     jouer_coup(plateau, col, joueur)
     game["coups"].append(col)
     
-    sequence = ",".join(str(c)) for c in game["coups"])
+    sequence = ",".join(str(c) for c in game["coups"])
     
     cur = CONN_PG.cursor()
     cur.execute(
@@ -175,7 +175,7 @@ def move(game_id: int, col: int):
         jouer_coup(plateau, col_ia, ia_couleur)
         game["coups"].append(col_ia)
         
-        sequence = ",".join(str(c)) for c in game["coups"])
+        sequence = ",".join(str(c) for c in game["coups"])
     
         cur = CONN_PG.cursor()
         cur.execute(

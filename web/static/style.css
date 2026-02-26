@@ -1,0 +1,8 @@
+:root { color-scheme: dark; }
+body { margin: 0; font-family: Arial, sans-serif; background: #0b1220; color: #e5e7eb; }
+.container { max-width: 900px; margin: 0 auto; padding: 16px; }
+.board { display: grid; grid-template-columns: repeat(9, 1fr); gap: 8px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 16px; }
+.cell { aspect-ratio: 1 / 1; border-radius: 12px; background: rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; font-size: 22px; cursor:pointer; user-select:none; }
+.cell:hover { background: rgba(255,255,255,0.14); }
+.status { margin: 12px 0; padding: 10px 12px; background: rgba(255,255,255,0.05); border-radius: 12px; }
+button, select { padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: #e5e7eb; }
