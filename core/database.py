@@ -1,20 +1,16 @@
 import os
 import psycopg2
 
-# ------------------------------------------------------------
-# Connexion à la base PostgreSQL
-# ------------------------------------------------------------
-
 def db_connexion():
-        """
+    """
     En production (Render) : utilise DATABASE_URL
     En local : fallback vers ta base locale
     """
-    db_url = os.getenv("DATABASE_URL") 
-    
+    db_url = os.getenv("DATABASE_URL")
+
     if db_url:
-        return psycopg2.connect4(db_url)
-        
+        return psycopg2.connect(db_url)
+
     return psycopg2.connect(
         dbname="connect4_db",
         user="connect4_user",
