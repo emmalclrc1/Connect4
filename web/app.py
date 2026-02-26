@@ -55,7 +55,9 @@ def new_game(mode: str = "hvh"):
     game_id = len(games) + 1
     
     # creer la partie en base (WEB)
-    id_partie_pg = db_creer_partie(CONN_PG, f"WEB_{game_id}")
+    import time
+    nom = f"WEB_{int(time.time()*1000)}"
+    id_partie_pg = db_creer_partie(CONN_PG, nom)
 
     games[game_id] = {
         "plateau": plateau,
@@ -117,7 +119,13 @@ def move(game_id: int, col: int):
 
     if game.get("winner"):
         return {"error": "Game finished", "plateau": plateau}
-
+    
+    mode = game["mode"]
+    ia_couleur = game["ia_couleur"]
+    
+    if mode in ("random", "minimax", "bga") and joueur == ia_couleur:
+        return {"error": "C'est le tour de l'IA", "plateau": plateau}
+    
     if not coup_valide(plateau, col):
         return {"error": "Invalid move", "plateau": plateau}
 
@@ -162,7 +170,10 @@ def move(game_id: int, col: int):
     mode = game["mode"]
     ia_couleur = game["ia_couleur"]
 
+    import time
+    
     if mode in ("random", "minimax", "bga") and game["joueur"] == ia_couleur:
+        time.sleep(0.6)
         try:
             col_ia = choisir_coup_ia(game)
         except Exception:
@@ -189,7 +200,7 @@ def move(game_id: int, col: int):
             CONN_PG,
             game["id_partie_pg"],
             len(game["coups"]),
-            ia_joueur,
+            ia_couleur,
             col_ia
         ) 
 

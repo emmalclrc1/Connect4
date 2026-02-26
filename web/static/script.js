@@ -93,6 +93,7 @@ async function newGame(){
 
   gameId = data.game_id;
   board = data.plateau;
+  
 
   winPos = null;
   setStatus({text: `Partie #${gameId} — Mode: ${mode}`, currentPlayer: "R"});
@@ -139,6 +140,8 @@ async function playMove(col){
 
 newGameBtn.addEventListener("click", newGame);
 modeSelect.addEventListener("change", () => {
+  setStatus({ text: "Nouvelle partie (mode changé)", currentPlayer: "R" });
+  newGame();
   // option: auto new game on mode change
   // newGame();
 });
