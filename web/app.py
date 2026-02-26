@@ -50,6 +50,9 @@ def new_game(mode: str = "hvh"):
     """
     plateau = creer_plateau()
     game_id = len(games) + 1
+    
+    # creer la partie en base (WEB)
+    id_partie_pg = db_creer_partie(CONN_PG, f"WEB_{game_id}")
 
     games[game_id] = {
         "plateau": plateau,
@@ -58,7 +61,8 @@ def new_game(mode: str = "hvh"):
         "mode": mode,
         "coups": [],          # historique des colonnes jouées
         "ia_couleur": JAUNE,  # IA joue JAUNE dans les modes IA
-        "minimax_depth": 2,
+        "minimax_depth": 4,
+        "id_partie_pg": id_partie_pg
     }
 
     return {"game_id": game_id, "plateau": plateau, "mode": mode}
@@ -119,6 +123,14 @@ def move(game_id: int, col: int):
     # -------------------------
     jouer_coup(plateau, col, joueur)
     game["coups"].append(col)
+    
+    db_ajouter_coup(
+        CONN_PG,
+        game["id_partie_pg"],
+        len(game["coups"]),
+        joueur,
+        col
+    )
 
     win_pos = verifier_victoire(plateau, joueur)
     if win_pos:
@@ -149,6 +161,14 @@ def move(game_id: int, col: int):
 
         jouer_coup(plateau, col_ia, ia_couleur)
         game["coups"].append(col_ia)
+        
+        db_ajouter_coup(
+            CONN_PG,
+            game["id_partie_pg"],
+            len(game["coups"]),
+            joueur,
+            col
+        ) 
 
         win_pos = verifier_victoire(plateau, ia_couleur)
         if win_pos:
@@ -164,5 +184,13 @@ def move(game_id: int, col: int):
     # Mode hvh (ou tour humain suivant)
     return {"plateau": plateau, "next_player": game["joueur"]}
        
-        
+@app.get("/debug/db")
+def debug_db():
+    conn = db_connexion()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) FROM parties;")
+    n = cur.fetchone()[0]
+    cur.close()
+    conn.close()
+    return {"count_parties": n}        
 
