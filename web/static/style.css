@@ -40,13 +40,19 @@ padding: 12px;
 /* le plateau doit rester carré */
 .board{
 width: 100%;
-max-width: 520px; /* limite sur desktop */
+max-width: 720px; /* limite sur desktop */
 margin: 0 auto;
 aspect-ratio: 1 / 1; /* carré */
 display: grid;
 grid-template-columns: repeat(9, 1fr);
 grid-template-rows: repeat(9, 1fr);
 gap: 8px;
+}
+
+@media (max-width: 600xp){
+  .board{
+    max-width: 100%;
+  }
 }
 
 /* chaque cellule carrée et visible */
