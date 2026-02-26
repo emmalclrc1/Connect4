@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
-from core.database import db_connexion
+from core.database import db_connexion, db_creer_partie, db_ajouter_coup
 from core.ia import coup_aleatoire, coup_minimax, coup_bga
 from core.config import ROUGE, JAUNE
 from core.modele import (
