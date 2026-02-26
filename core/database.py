@@ -1,3 +1,4 @@
+import os
 import psycopg2
 
 # ------------------------------------------------------------
@@ -5,7 +6,15 @@ import psycopg2
 # ------------------------------------------------------------
 
 def db_connexion():
-    """Crée une connexion PostgreSQL."""
+        """
+    En production (Render) : utilise DATABASE_URL
+    En local : fallback vers ta base locale
+    """
+    db_url = os.getenv("DATABASE_URL") 
+    
+    if db_url:
+        return psycopg2.connect4(db_url)
+        
     return psycopg2.connect(
         dbname="connect4_db",
         user="connect4_user",
