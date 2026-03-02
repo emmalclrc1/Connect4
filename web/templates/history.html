@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Connect4 — Historique</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">CONNECT <span class="brand4">4</span></div>
+  <nav class="tabs">
+    <a class="tab" href="/play">Jouer</a>
+    <a class="tab active" href="/history">Historique</a>
+    <a class="tab" href="/bga">BGA</a>
+    <a class="tab" href="/about">Soutenance</a>
+  </nav>
+</header>
+
+<main class="page">
+  <section class="card">
+    <div class="row">
+      <div>
+        <h1>Historique</h1>
+        <div class="muted">Toutes les parties enregistrées + replay</div>
+      </div>
+      <button id="refreshBtn" class="btn">Rafraîchir</button>
+    </div>
+    <div id="count" class="muted">—</div>
+  </section>
+
+  <section class="card">
+    <div class="tableWrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>#</th><th>Date</th><th>Coups</th><th>Gagnant</th><th>Statut</th><th>Replay</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script src="/static/history.js" defer></script>
+</body>
+</html>

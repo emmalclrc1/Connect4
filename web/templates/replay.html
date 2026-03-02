@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Connect4 — Replay</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">CONNECT <span class="brand4">4</span></div>
+  <nav class="tabs">
+    <a class="tab" href="/play">Jouer</a>
+    <a class="tab active" href="/history">Historique</a>
+    <a class="tab" href="/bga">BGA</a>
+    <a class="tab" href="/about">Soutenance</a>
+  </nav>
+</header>
+
+<main class="page">
+  <section class="card">
+    <div class="row">
+      <div>
+        <h1>Replay</h1>
+        <div class="muted" id="meta">Chargement...</div>
+      </div>
+      <a class="btn" href="/history">Retour</a>
+    </div>
+
+    <div class="row mt">
+      <button class="btn" id="playBtn">▶ Play</button>
+      <button class="btn" id="pauseBtn">⏸ Pause</button>
+      <button class="btn" id="resetBtn">↺ Reset</button>
+      <label class="muted">Vitesse
+        <select id="speed" class="sel">
+          <option value="120">Rapide</option>
+          <option value="250" selected>Normal</option>
+          <option value="500">Lent</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="muted mt">Séquence : <span id="seq">—</span></div>
+  </section>
+
+  <section class="boardArea">
+    <div class="board"><div id="grid"></div></div>
+  </section>
+</main>
+
+<script src="/static/replay.js" defer></script>
+</body>
+</html>

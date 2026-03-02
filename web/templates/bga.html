@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Connect4 — BGA</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">CONNECT <span class="brand4">4</span></div>
+  <nav class="tabs">
+    <a class="tab" href="/play">Jouer</a>
+    <a class="tab" href="/history">Historique</a>
+    <a class="tab active" href="/bga">BGA</a>
+    <a class="tab" href="/about">Soutenance</a>
+  </nav>
+</header>
+
+<main class="page">
+  <section class="card">
+    <h1>BGA</h1>
+    <div class="muted">Espace dédié à ton import BGA (tes scripts, consignes, etc.)</div>
+
+    <div class="cardInner mt">
+      <h3>Importer une table</h3>
+      <pre class="code">python scrapping.py --table NUMERO_TABLE</pre>
+      <div class="muted">Après import, tu vois les parties dans l’Historique.</div>
+    </div>
+  </section>
+</main>
+</body>
+</html>
