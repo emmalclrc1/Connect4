@@ -56,4 +56,3 @@ def db_ajouter_coup(conn, id_partie, numero, joueur, colonne):
 
 
 
-

@@ -440,6 +440,12 @@ async def move(game_id: str, col: int = Query(..., ge=0, le=50)):
         game["coups"].append(col)
         with get_conn() as conn:
             db_ajouter_coup(conn, game["id_partie_pg"], len(game["coups"]), joueur, col)
+        with get_conn() as conn:
+            safe_query(
+                conn,
+                "UPDATE parties SET sequence=%s WHERE id_partie=%s;",
+                (sequence_str(game["coups"]), game["id_partie_pg"]),
+        )
 
         # victoire humain ?
         win_pos = verifier_victoire(plateau, joueur)
@@ -483,7 +489,14 @@ async def move(game_id: str, col: int = Query(..., ge=0, le=50)):
 
             with get_conn() as conn:
                 db_ajouter_coup(conn, game["id_partie_pg"], len(game["coups"]), game["ia_color"], col_ia)
-
+            
+            with get_conn() as conn:
+                safe_query(
+                    conn,
+                    "UPDATE parties SET sequence=%s WHERE id_partie=%s;",
+                    (sequence_str(game["coups"]), game["id_partie_pg"]),
+            )
+            
             # victoire IA ?
             win_pos = verifier_victoire(plateau, game["ia_color"])
             if win_pos:
