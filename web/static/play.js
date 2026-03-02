@@ -4,6 +4,8 @@ let winPos = null;
 let busy = false;
 
 let currentUIMode = "pvp"; // pvp|vsai|iaia
+let lastHintBest = null;    // pour highlight
+let lastWeights = null;     // poids/scores pour afficher au-dessus
 
 const gridEl = document.getElementById("grid");
 const boardTopEl = document.getElementById("boardTop");
@@ -12,7 +14,9 @@ const newGameBtn = document.getElementById("newGameBtn");
 const statusEl = document.getElementById("status");
 const seqEl = document.getElementById("seq");
 const predEl = document.getElementById("pred");
+const predDot = document.getElementById("predDot");
 const hintEl = document.getElementById("hint");
+const hintDot = document.getElementById("hintDot");
 const hintDetailsEl = document.getElementById("hintDetails");
 const globalStatsEl = document.getElementById("globalStats");
 const optionsEl = document.getElementById("options");
@@ -43,17 +47,117 @@ function dims(){
   return { rows, cols };
 }
 
+function setSequence(seq){
+  seqEl.textContent = (seq && seq.length) ? seq : "—";
+}
+
+function labelToText(l){
+  if (l === "victoire") return "Victoire possible";
+  if (l === "defaite") return "Risque de défaite";
+  if (l === "nul_ou_equilibre") return "Nul / équilibré";
+  return "Incertain";
+}
+function setPred(label, score, best){
+  if (!label){
+    predEl.textContent = "—";
+    predDot.className = "dot";
+    return;
+  }
+  predEl.textContent = `${labelToText(label)} (score ${score}) — best: col ${best}`;
+  if (label === "victoire") predDot.className = "dot good";
+  else if (label === "defaite") predDot.className = "dot bad";
+  else if (label === "nul_ou_equilibre") predDot.className = "dot warn";
+  else predDot.className = "dot";
+}
+
+function clearHint(){
+  hintEl.textContent = "—";
+  hintDot.className = "dot";
+  hintDetailsEl.innerHTML = "";
+  lastHintBest = null;
+  lastWeights = null;
+}
+
+function renderHint(human_hint){
+  clearHint();
+  if (!human_hint) return;
+
+  lastHintBest = human_hint.best_col;
+
+  hintEl.textContent = `Col ${human_hint.best_col}`;
+  hintDot.className = "dot good";
+
+  if (human_hint.type === "bga"){
+    // weights
+    const w = human_hint.weights || {};
+    lastWeights = { type: "bga", data: w, best: human_hint.best_col };
+
+    const keys = Object.keys(w).sort((a,b)=>Number(a)-Number(b));
+    hintDetailsEl.innerHTML = `<div class="muted">BGA (matches=${human_hint.matches ?? 0})</div>`;
+    if (!keys.length){
+      hintDetailsEl.innerHTML += `<div class="muted">Pas assez de données → fallback minimax faible.</div>`;
+      return;
+    }
+    keys.forEach(k=>{
+      const div = document.createElement("div");
+      div.className = "weightLine";
+      div.textContent = `Col ${k} : ${Number(w[k]).toFixed(2)}`;
+      hintDetailsEl.appendChild(div);
+    });
+    return;
+  }
+
+  // minimax scores
+  const scores = human_hint.scores || {};
+  lastWeights = { type: "minimax", data: scores, best: human_hint.best_col };
+
+  hintDetailsEl.innerHTML = `<div class="muted">Minimax — ${labelToText(human_hint.label)} (score ${human_hint.score})</div>`;
+  Object.keys(scores)
+    .filter(k => scores[k] !== null && scores[k] !== undefined)
+    .sort((a,b)=>Number(a)-Number(b))
+    .forEach(k=>{
+      const div = document.createElement("div");
+      div.className = "weightLine";
+      div.textContent = `Col ${k} : ${scores[k]}`;
+      hintDetailsEl.appendChild(div);
+    });
+}
+
 function renderTopButtons(){
   boardTopEl.innerHTML = "";
   if (!board) return;
   const { cols } = dims();
+
   for (let c = 0; c < cols; c++){
+    const wrap = document.createElement("div");
+    wrap.className = "colWrap";
+
+    // weight label
+    const w = document.createElement("div");
+    w.className = "colWeight";
+
+    let value = null;
+    if (lastWeights && lastWeights.data){
+      if (lastWeights.type === "bga"){
+        value = (lastWeights.data[c] !== undefined) ? Number(lastWeights.data[c]).toFixed(1) : null;
+      } else {
+        value = (lastWeights.data[c] !== undefined && lastWeights.data[c] !== null) ? String(lastWeights.data[c]) : null;
+      }
+    }
+    w.textContent = value === null ? "—" : value;
+    if (lastHintBest === c) w.classList.add("best");
+
+    // drop btn
     const btn = document.createElement("button");
     btn.className = "dropBtn";
     btn.textContent = "↓";
     btn.disabled = busy || (currentUIMode === "iaia");
+    if (lastHintBest === c) btn.classList.add("best");
     btn.addEventListener("click", () => playMove(c));
-    boardTopEl.appendChild(btn);
+
+    wrap.appendChild(w);
+    wrap.appendChild(btn);
+    boardTopEl.appendChild(wrap);
   }
 }
 
@@ -73,71 +177,12 @@ function renderBoard(){
       const piece = document.createElement("div");
       piece.className = "piece " + pieceClass(board[r][c]);
       cell.appendChild(piece);
+
       cell.addEventListener("click", () => playMove(c));
       gridEl.appendChild(cell);
     }
   }
   renderTopButtons();
-}
-
-function setSequence(seq){
-  seqEl.textContent = (seq && seq.length) ? seq : "—";
-}
-
-function labelToEmoji(l){
-  if (l === "victoire") return "✅ victoire";
-  if (l === "defaite") return "❌ défaite";
-  if (l === "nul_ou_equilibre") return "🤝 nul/équilibré";
-  return "❓ incertaine";
-}
-
-function renderPrediction(pred){
-  if (!pred){ predEl.textContent = "—"; return; }
-  predEl.textContent = `${labelToEmoji(pred.label)} (score ${pred.score}) — meilleur coup IA: ${pred.best_col}`;
-}
-
-function clearHint(){
-  hintEl.textContent = "—";
-  hintDetailsEl.innerHTML = "";
-}
-
-function renderHint(human_hint){
-  clearHint();
-  if (!human_hint) return;
-
-  hintEl.textContent = `Meilleur coup conseillé: colonne ${human_hint.best_col}`;
-
-  if (human_hint.type === "minimax"){
-    const scores = human_hint.scores || {};
-    const keys = Object.keys(scores).filter(k => scores[k] !== null).sort((a,b)=>Number(a)-Number(b));
-    if (!keys.length) return;
-
-    hintDetailsEl.innerHTML = `<div class="muted">Minimax (${labelToEmoji(human_hint.label)})</div>`;
-    keys.forEach(k=>{
-      const v = scores[k];
-      const line = document.createElement("div");
-      line.className = "weightLine";
-      line.textContent = `Col ${k} : ${v}`;
-      hintDetailsEl.appendChild(line);
-    });
-  } else if (human_hint.type === "bga"){
-    const w = human_hint.weights || {};
-    const keys = Object.keys(w).sort((a,b)=>Number(a)-Number(b));
-    hintDetailsEl.innerHTML = `<div class="muted">BGA weights (matches=${human_hint.matches ?? 0})</div>`;
-    if (!keys.length){
-      const div = document.createElement("div");
-      div.className = "muted";
-      div.textContent = "Pas assez de données BGA, conseil fallback minimax faible.";
-      hintDetailsEl.appendChild(div);
-      return;
-    }
-    keys.forEach(k=>{
-      const line = document.createElement("div");
-      line.className = "weightLine";
-      line.textContent = `Col ${k} : ${Number(w[k]).toFixed(2)}`;
-      hintDetailsEl.appendChild(line);
-    });
-  }
 }
 
 async function loadStats(){
@@ -146,7 +191,7 @@ async function loadStats(){
     const data = await res.json();
     if (!data.ok) throw new Error();
     globalStatsEl.textContent =
-      `Parties: ${data.total} | Victoires R: ${data.rouge} | Victoires J: ${data.jaune} | Nuls: ${data.nuls}`;
+      `Parties: ${data.total} • Victoires Rouge: ${data.rouge} • Victoires Jaune: ${data.jaune} • Nuls: ${data.nuls}`;
   }catch{
     globalStatsEl.textContent = "Stats indisponibles";
   }
@@ -154,7 +199,7 @@ async function loadStats(){
 
 function renderOptions(){
   if (currentUIMode === "pvp"){
-    optionsEl.innerHTML = `<div class="muted">PvP (humain vs humain) — ROUGE commence.</div>`;
+    optionsEl.innerHTML = `<div class="muted">PvP — ROUGE commence.</div>`;
     return;
   }
 
@@ -174,7 +219,7 @@ function renderOptions(){
             <option value="bga">BGA</option>
           </select>
         </label>
-        <label>Profondeur minimax
+        <label>Profondeur
           <input id="depth" class="inpSmall" type="number" min="1" max="9" value="4"/>
         </label>
         <label>Délai IA (ms)
@@ -185,7 +230,6 @@ function renderOptions(){
     return;
   }
 
-  // ia/ia
   optionsEl.innerHTML = `
     <div class="optGrid">
       <label>IA ROUGE
@@ -202,14 +246,14 @@ function renderOptions(){
           <option value="bga" selected>BGA</option>
         </select>
       </label>
-      <label>Profondeur minimax
+      <label>Profondeur
         <input id="depth" class="inpSmall" type="number" min="1" max="9" value="4"/>
       </label>
       <label>Délai (ms)
         <input id="delay" class="inpSmall" type="number" min="0" max="2000" value="250"/>
       </label>
       <button id="runBtn" class="btn">▶ Lancer IA/IA</button>
-      <button id="stopBtn" class="btn">⏹ Stop</button>
+      <button id="stopBtn" class="btn secondary">⏹ Stop</button>
     </div>
   `;
   document.getElementById("runBtn").addEventListener("click", runIAIA);
@@ -223,8 +267,10 @@ async function newGame(){
   setBusy(true);
 
   try{
-    let url = "/new-game?";
+    clearHint();
+    setPred(null);
 
+    let url = "/new-game?";
     if (currentUIMode === "pvp"){
       url += "mode=pvp";
     } else if (currentUIMode === "vsai"){
@@ -243,7 +289,6 @@ async function newGame(){
 
     const res = await fetch(url, { method: "POST" });
     const data = await res.json();
-
     if (!data.ok){
       statusEl.textContent = data.error || "Erreur new-game";
       return;
@@ -253,15 +298,14 @@ async function newGame(){
     board = data.plateau;
     winPos = null;
 
-    statusEl.textContent = `Partie ${gameId} — prête`;
     setSequence(data.sequence || "");
-    renderPrediction(null);
+    statusEl.textContent = `Partie prête — joue une colonne`;
 
     if (data.auto?.ia_move !== undefined){
-      statusEl.textContent = `L’IA commence (col ${data.auto.ia_move}) — à toi de jouer`;
+      statusEl.textContent = `L’IA commence (col ${data.auto.ia_move}) — à toi`;
     }
 
-    renderHint(data.human_hint);
+    renderHint(data.human_hint || null);
     renderBoard();
     await loadStats();
   } finally {
@@ -287,8 +331,13 @@ async function playMove(col){
     winPos = data.win_pos || null;
 
     setSequence(data.sequence || "");
-    renderPrediction(data.prediction_ai || null);
+    if (data.prediction_ai){
+      setPred(data.prediction_ai.label, data.prediction_ai.score, data.prediction_ai.best_col);
+    } else {
+      setPred(null);
+    }
     renderHint(data.human_hint || null);
+
     renderBoard();
 
     if (data.winner){
@@ -324,7 +373,7 @@ async function stepIAIA(){
   board = data.plateau;
   winPos = data.win_pos || null;
   setSequence(data.sequence || "");
-  renderPrediction(null);
+  setPred(null);
   clearHint();
   renderBoard();
 
@@ -365,7 +414,7 @@ async function analyzeSituation(){
     return;
   }
 
-  anRes.textContent = `Joueur à jouer: ${data.joueur_a_jouer} — meilleur coup: ${data.best_col} — ${labelToEmoji(data.label)} (score ${data.score_best})`;
+  anRes.textContent = `Joueur: ${data.joueur_a_jouer} — meilleur: col ${data.best_col} — ${labelToText(data.label)} (score ${data.score_best})`;
   pvEl.innerHTML = "";
 
   const pv = data.pv || [];
@@ -373,12 +422,11 @@ async function analyzeSituation(){
     pvEl.innerHTML = `<div class="muted">Pas de ligne trouvée (augmente la profondeur).</div>`;
     return;
   }
-
   pv.forEach((m,i)=>{
-    const line = document.createElement("div");
-    line.className = "weightLine";
-    line.textContent = `#${i+1} ${m.joueur} -> col ${m.col} (score ${m.score})`;
-    pvEl.appendChild(line);
+    const div = document.createElement("div");
+    div.className = "weightLine";
+    div.textContent = `#${i+1} ${m.joueur} → col ${m.col} (score ${m.score})`;
+    pvEl.appendChild(div);
   });
 }
 

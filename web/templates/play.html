@@ -17,17 +17,17 @@
   </nav>
 </header>
 
-<main class="page">
+<main class="page grid2">
   <section class="card">
     <div class="row">
       <div>
         <h1>Jouer</h1>
-        <div class="muted">Vs IA en Rouge ou Jaune + prédiction + meilleur coup conseillé</div>
+        <div class="muted">UI moderne + poids par colonne + prediction claire</div>
       </div>
       <button id="newGameBtn" class="btn">Nouvelle partie</button>
     </div>
 
-    <div class="modes">
+    <div class="mt modes">
       <button class="modeBtn active" data-mode="pvp">PvP</button>
       <button class="modeBtn" data-mode="vsai">Vs IA</button>
       <button class="modeBtn" data-mode="iaia">IA/IA</button>
@@ -35,37 +35,38 @@
 
     <div id="options" class="mt"></div>
 
-    <div class="statsRow" id="globalStats">Stats...</div>
+    <div class="mt pills">
+      <span class="pill"><span class="dot"></span> Séquence: <span id="seq">—</span></span>
+      <span class="pill"><span id="predDot" class="dot"></span> Prédiction IA: <span id="pred">—</span></span>
+      <span class="pill"><span id="hintDot" class="dot"></span> Conseil humain: <span id="hint">—</span></span>
+    </div>
+
+    <div class="mt hintBox">
+      <div class="muted">Détails conseil / scores</div>
+      <div id="hintDetails" class="weights"></div>
+    </div>
+
+    <div class="mt muted" id="globalStats">Stats...</div>
   </section>
 
   <section class="boardArea">
     <div class="boardTop" id="boardTop"></div>
     <div class="board"><div id="grid"></div></div>
 
-    <section class="card">
+    <section class="card" style="width:min(94vw,600px)">
       <div id="status" class="statusLine">—</div>
-      <div class="muted">Séquence : <span id="seq">—</span></div>
 
-      <div class="muted mt">
-        Prédiction IA : <span id="pred">—</span>
-      </div>
-
-      <div class="muted mt">
-        Conseil pour l'humain : <span id="hint">—</span>
-      </div>
-      <div id="hintDetails" class="weights"></div>
-
-      <details class="debug">
-        <summary>Analyse situation (pour l’image du prof)</summary>
-        <div class="muted">Colle la séquence (ex: 3,3,4,2) puis “Analyser”.</div>
-        <input id="seqInput" class="inp" placeholder="3,3,4,2" />
+      <details class="mt">
+        <summary class="muted">Analyse situation (pour l’image du prof)</summary>
+        <div class="mt muted">Colle la séquence (ex: 3,3,4,2) puis “Analyser”.</div>
+        <input id="seqInput" class="inp mt" placeholder="3,3,4,2" />
         <div class="row mt">
           <label class="muted">Profondeur
             <input id="anDepth" class="inpSmall" type="number" min="1" max="9" value="6" />
           </label>
           <button id="anBtn" class="btn">Analyser</button>
         </div>
-        <div class="muted mt">Résultat : <span id="anRes">—</span></div>
+        <div class="mt muted">Résultat : <span id="anRes">—</span></div>
         <div id="pv" class="weights"></div>
       </details>
     </section>
