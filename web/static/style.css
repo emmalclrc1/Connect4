@@ -13,6 +13,35 @@
   --shadow: 0 12px 40px rgba(0,0,0,0.45);
 }
 
+/* Reset liens / base */
+a{
+  color: inherit !important;
+  text-decoration: none !important;
+}
+a:hover{
+  opacity: 0.9;
+  text-decoration: none !important;
+}
+
+/* Titres plus “pro” */
+h1{
+  font-size: 28px !important;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  margin: 0 0 6px;
+}
+.muted{
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.modeBtn, .btn{
+  transition: transform 0.06s ease, opacity 0.15s ease;
+}
+.modeBtn:active, .btn:active{
+  transform: scale(0.99);
+}
+
 *{ box-sizing:border-box; }
 body{
   margin:0;
