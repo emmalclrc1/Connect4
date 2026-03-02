@@ -4,11 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Connect4 — Jouer</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/style.css?v=20260302">
 </head>
 <body>
 <header class="topbar">
   <div class="brand">CONNECT <span class="brand4">4</span></div>
+  <div class="author">Emma Le Cloirec</div>
   <nav class="tabs">
     <a class="tab active" href="/play">Jouer</a>
     <a class="tab" href="/history">Historique</a>
@@ -22,7 +24,7 @@
     <div class="row">
       <div>
         <h1>Jouer</h1>
-        <div class="muted">Choisis un mode, puis joue une colonne</div>
+        <div class="muted">Choisis un mode, puis clique sur “Nouvelle partie”.</div>
       </div>
       <button id="newGameBtn" class="btn">Nouvelle partie</button>
     </div>
@@ -37,13 +39,6 @@
 
     <div class="mt pills">
       <span class="pill"><span class="dot"></span> Séquence: <span id="seq">—</span></span>
-      <span class="pill"><span id="predDot" class="dot"></span> Prédiction IA: <span id="pred">—</span></span>
-      <span class="pill"><span id="hintDot" class="dot"></span> Conseil humain: <span id="hint">—</span></span>
-    </div>
-
-    <div class="mt hintBox">
-      <div class="muted">Détails conseil / scores</div>
-      <div id="hintDetails" class="weights"></div>
     </div>
 
     <div class="mt muted" id="globalStats">Stats...</div>
@@ -54,25 +49,11 @@
     <div class="board"><div id="grid"></div></div>
 
     <section class="card" style="width:min(94vw,600px)">
-      <div id="status" class="statusLine">—</div>
-
-      <details class="mt">
-        <summary class="muted">Analyse situation </summary>
-        <div class="mt muted">Colle la séquence (ex: 3,3,4,2) puis “Analyser”.</div>
-        <input id="seqInput" class="inp mt" placeholder="3,3,4,2" />
-        <div class="row mt">
-          <label class="muted">Profondeur
-            <input id="anDepth" class="inpSmall" type="number" min="1" max="9" value="6" />
-          </label>
-          <button id="anBtn" class="btn">Analyser</button>
-        </div>
-        <div class="mt muted">Résultat : <span id="anRes">—</span></div>
-        <div id="pv" class="weights"></div>
-      </details>
+      <div id="status" class="statusLine">Clique sur “Nouvelle partie”.</div>
     </section>
   </section>
 </main>
 
-<script src="/static/play.js" defer></script>
+<script src="/static/play.js?v=20260302" defer></script>
 </body>
 </html>

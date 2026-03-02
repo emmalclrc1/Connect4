@@ -1,21 +1,10 @@
 const gridEl = document.getElementById("grid");
 const metaEl = document.getElementById("meta");
-const seqEl = document.getElementById("seq");
-const progressEl = document.getElementById("progress");
+const stepInfoEl = document.getElementById("stepInfo");
 
-const playBtn = document.getElementById("playBtn");
-const pauseBtn = document.getElementById("pauseBtn");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
-const resetBtn = document.getElementById("resetBtn");
-const speedSel = document.getElementById("speed");
-
-let board = null;
-let coups = [];
-let idx = 0;
-let timer = null;
-let rows = 9;
-let cols = 9;
+const endBtn = document.getElementById("endBtn");
 
 function pieceClass(v){
   if (v === "R") return "red";
@@ -23,101 +12,112 @@ function pieceClass(v){
   return "";
 }
 
-function createEmpty(r, c){
-  return Array.from({length: r}, () => Array.from({length: c}, () => "."));
+function createBoard(rows, cols){
+  return Array.from({length: rows}, () => Array.from({length: cols}, () => "."));
 }
 
-function drop(col, joueur){
-  for (let r = rows - 1; r >= 0; r--){
+function drop(board, col, player){
+  for (let r = board.length - 1; r >= 0; r--){
     if (board[r][col] === "."){
-      board[r][col] = joueur;
-      return true;
+      board[r][col] = player;
+      return {row:r, col};
     }
   }
-  return false;
+  return null;
 }
 
-function render(){
-  document.documentElement.style.setProperty("--cols", cols);
+function checkWin(board, player){
+  const R = board.length;
+  const C = board[0].length;
+  const dirs = [[0,1],[1,0],[1,1],[-1,1]];
+  for (let r=0;r<R;r++){
+    for (let c=0;c<C;c++){
+      if (board[r][c] !== player) continue;
+      for (const [dr,dc] of dirs){
+        const pos = [[r,c]];
+        for (let k=1;k<4;k++){
+          const nr=r+dr*k, nc=c+dc*k;
+          if (nr<0||nr>=R||nc<0||nc>=C) break;
+          if (board[nr][nc] !== player) break;
+          pos.push([nr,nc]);
+        }
+        if (pos.length===4) return pos;
+      }
+    }
+  }
+  return null;
+}
+
+function render(board, winPos, lastMove){
+  document.documentElement.style.setProperty("--cols", board[0].length);
   gridEl.innerHTML = "";
-  for (let r = 0; r < rows; r++){
-    for (let c = 0; c < cols; c++){
+  for (let r=0;r<board.length;r++){
+    for (let c=0;c<board[0].length;c++){
       const cell = document.createElement("div");
       cell.className = "cell";
+
+      if (winPos && winPos.some(([rr,cc])=>rr===r && cc===c)){
+        cell.classList.add("win");
+      }
+
       const piece = document.createElement("div");
       piece.className = "piece " + pieceClass(board[r][c]);
+
+      if (lastMove && lastMove.row===r && lastMove.col===c){
+        piece.classList.add("drop");
+      }
+
       cell.appendChild(piece);
       gridEl.appendChild(cell);
     }
   }
-  progressEl.textContent = `${idx}/${coups.length}`;
 }
 
-function stop(){
-  if (timer) clearInterval(timer);
-  timer = null;
+function getPartieId(){
+  const m = window.location.pathname.match(/\/replay\/(\d+)/);
+  return m ? Number(m[1]) : null;
 }
 
-function applyUpTo(k){
-  board = createEmpty(rows, cols);
-  for (let i = 0; i < k; i++){
-    const m = coups[i];
-    drop(m.col, m.joueur);
-  }
-  idx = k;
-  render();
-}
-
-function stepForward(){
-  if (idx >= coups.length) { stop(); return; }
-  const m = coups[idx];
-  drop(m.col, m.joueur);
-  idx++;
-  render();
-}
-
-function stepBack(){
-  if (idx <= 0) return;
-  applyUpTo(idx - 1);
-}
-
-function play(){
-  stop();
-  const ms = Number(speedSel.value || 250);
-  timer = setInterval(stepForward, ms);
-}
-
-function reset(){
-  stop();
-  applyUpTo(0);
-}
+let coups = [];
+let rows = 9, cols = 9;
+let idx = 0;
 
 async function load(){
-  const id = Number(window.location.pathname.split("/").pop());
+  const id = getPartieId();
   const res = await fetch(`/api/replay/${id}`);
   const data = await res.json();
-
   if (!data.ok){
     metaEl.textContent = data.error || "Erreur";
     return;
   }
 
-  const p = data.partie;
+  rows = data.partie.nb_lignes;
+  cols = data.partie.nb_colonnes;
   coups = data.coups || [];
-  rows = p.nb_lignes || 9;
-  cols = p.nb_colonnes || 9;
 
-  metaEl.textContent =
-    `Partie #${p.id_partie} — ${p.created_at ? new Date(p.created_at).toLocaleString() : ""} — Statut: ${p.statut} — Gagnant: ${p.gagnant || "—"}`;
-  seqEl.textContent = p.sequence || "—";
-
-  applyUpTo(0);
+  metaEl.textContent = `Partie #${data.partie.id_partie} • ${data.partie.statut} • gagnant: ${data.partie.gagnant ?? "nul"} • coups: ${coups.length}`;
+  idx = 0;
+  apply();
 }
 
-playBtn.addEventListener("click", play);
-pauseBtn.addEventListener("click", stop);
-resetBtn.addEventListener("click", reset);
-nextBtn.addEventListener("click", () => { stop(); stepForward(); });
-prevBtn.addEventListener("click", () => { stop(); stepBack(); });
+function apply(){
+  const board = createBoard(rows, cols);
+  let lastMove = null;
+  let winPos = null;
+
+  for (let i=0;i<idx;i++){
+    const m = coups[i];
+    lastMove = drop(board, m.col, m.joueur);
+    winPos = checkWin(board, m.joueur);
+    if (winPos) break;
+  }
+
+  render(board, (idx===coups.length ? winPos : null), lastMove);
+  stepInfoEl.textContent = `Coup ${idx}/${coups.length}`;
+}
+
+prevBtn.addEventListener("click", () => { idx = Math.max(0, idx-1); apply(); });
+nextBtn.addEventListener("click", () => { idx = Math.min(coups.length, idx+1); apply(); });
+endBtn.addEventListener("click", () => { idx = coups.length; apply(); });
 
 load();

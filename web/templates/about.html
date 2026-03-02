@@ -4,11 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Connect4 — Soutenance</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/style.css?v=20260302">
 </head>
 <body>
 <header class="topbar">
   <div class="brand">CONNECT <span class="brand4">4</span></div>
+  <div class="author">Emma Le Cloirec</div>
   <nav class="tabs">
     <a class="tab" href="/play">Jouer</a>
     <a class="tab" href="/history">Historique</a>
@@ -19,23 +21,22 @@
 
 <main class="page">
   <section class="card">
-    <h1>Soutenance</h1>
-    <div class="muted">Stats DB + présentation travail </div>
+    <h1>Soutenance — Synthèse du projet</h1>
+    <div class="muted">
+      Application Puissance 4 (FastAPI + DB PostgreSQL + IA). Import de parties BGA, replay, historique filtrable.
+    </div>
+  </section>
 
-    <div class="mt" id="aboutStats">Chargement...</div>
-
-    <div class="cardInner mt">
-      <h3>À présenter au prof</h3>
-      <ul class="muted">
-        <li>Quantité de parties importées / jouées sur le site</li>
-        <li>Choix IA : minimax + BGA (poids via DB)</li>
-        <li>Problèmes rencontrés (Render DB, concurrence, UI mobile, etc.)</li>
-      </ul>
-      <div class="muted"> ex -> ouvrir /history pour montrer la DB + replay en live.</div>
+  <section class="card mt">
+    <h2>Statistiques</h2>
+    <div id="summary" class="mt">Chargement...</div>
+    <div class="mt">
+      <h3>Activité (14 jours)</h3>
+      <div id="activity" class="weights"></div>
     </div>
   </section>
 </main>
 
-<script src="/static/about.js" defer></script>
+<script src="/static/about.js?v=20260302" defer></script>
 </body>
 </html>

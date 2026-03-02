@@ -1,6 +1,7 @@
 const tbody = document.getElementById("tbody");
 const refreshBtn = document.getElementById("refreshBtn");
 const countEl = document.getElementById("count");
+const filterEl = document.getElementById("filter");
 
 function fmtDate(iso){
   if (!iso) return "—";
@@ -11,6 +12,10 @@ function gagnantLabel(g){
   if (g === "R") return "Rouge";
   if (g === "J") return "Jaune";
   return "—";
+}
+
+function escapeHtml(s){
+  return (s || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
 }
 
 async function loadHistory(){
@@ -26,9 +31,12 @@ async function loadHistory(){
   }
 
   const items = data.items || [];
-  countEl.textContent = `${items.length} parties affichées`;
+  const f = filterEl.value;
 
-  for (const it of items){
+  const filtered = (f === "all") ? items : items.filter(it => (it.statut || "") === f);
+  countEl.textContent = `${filtered.length} parties affichées (sur ${items.length})`;
+
+  for (const it of filtered){
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${it.id_partie}</td>
@@ -36,6 +44,7 @@ async function loadHistory(){
       <td>${it.nb_coups}</td>
       <td>${gagnantLabel(it.gagnant)}</td>
       <td>${it.statut || "—"}</td>
+      <td>${escapeHtml(it.sequence || "")}</td>
       <td><a class="linkBtn" href="/replay/${it.id_partie}">Voir</a></td>
     `;
     tbody.appendChild(tr);
@@ -43,4 +52,5 @@ async function loadHistory(){
 }
 
 refreshBtn.addEventListener("click", loadHistory);
+filterEl.addEventListener("change", loadHistory);
 loadHistory();

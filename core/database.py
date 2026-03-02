@@ -28,6 +28,11 @@ def safe_query(conn, query, params=None, fetch=False):
 
 
 def db_creer_partie(conn, nom, nb_lignes=9, nb_colonnes=9, confiance=1):
+    """
+    Crée une partie EN_COURS.
+    ⚠️ Dans la nouvelle logique, on appelle cette fonction uniquement au 1er vrai coup
+    (pour éviter les parties à 0 coup).
+    """
     rows = safe_query(
         conn,
         """
@@ -50,8 +55,6 @@ def db_ajouter_coup(conn, id_partie, numero, joueur, colonne):
         """,
         (id_partie, numero, joueur, colonne),
     )
-
-
 
 
 

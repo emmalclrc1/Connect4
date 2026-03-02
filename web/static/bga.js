@@ -1,41 +1,38 @@
 const tableIdEl = document.getElementById("tableId");
-const confEl = document.getElementById("conf");
 const importBtn = document.getElementById("importBtn");
 const statusEl = document.getElementById("importStatus");
 
-function setStatus(txt, ok=null){
-  statusEl.textContent = txt;
-  if (ok === true) statusEl.style.color = "var(--good)";
-  else if (ok === false) statusEl.style.color = "var(--bad)";
-  else statusEl.style.color = "";
+function setStatus(msg){
+  statusEl.textContent = msg;
 }
 
 async function doImport(){
-  const tableId = Number((tableIdEl.value || "").trim());
-  const conf = Number((confEl.value || "1").trim());
-
+  const v = (tableIdEl.value || "").trim();
+  if (!v){
+    setStatus("Entre un table_id.");
+    return;
+  }
+  const tableId = Number(v);
   if (!Number.isFinite(tableId) || tableId <= 0){
-    setStatus("Table ID invalide.", false);
+    setStatus("table_id invalide.");
     return;
   }
 
   importBtn.disabled = true;
-  setStatus("Import en cours… (Selenium peut prendre quelques secondes)");
+  setStatus("Import en cours...");
 
   try{
-    const res = await fetch(`/api/bga/import?table_id=${encodeURIComponent(tableId)}&confiance=${encodeURIComponent(conf)}&headless=true`, {
-      method: "POST"
-    });
+    const res = await fetch(`/api/bga/import?table_id=${encodeURIComponent(tableId)}`, { method: "POST" });
     const data = await res.json();
+
     if (!data.ok){
-      setStatus(data.error || "Erreur import", false);
+      setStatus("Erreur : " + (data.error || "import échoué"));
       return;
     }
 
-    const win = data.gagnant ? (data.gagnant === "R" ? "Rouge" : "Jaune") : "—";
-    setStatus(`✅ Import OK — Partie #${data.id_partie} — coups: ${data.nb_coups} — gagnant: ${win}`, true);
+    setStatus(`✅ Import OK — partie #${data.id_partie} — coups: ${data.moves} — gagnant: ${data.winner ?? "nul"}`);
   }catch(e){
-    setStatus("Erreur réseau / serveur", false);
+    setStatus("Erreur réseau / serveur.");
   }finally{
     importBtn.disabled = false;
   }

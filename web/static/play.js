@@ -1,32 +1,18 @@
 let gameId = null;
 let board = null;
 let winPos = null;
+let lastMove = null;
 let busy = false;
 
 let currentUIMode = "pvp"; // pvp|vsai|iaia
-let lastHintBest = null;    // pour highlight
-let lastWeights = null;     // poids/scores pour afficher au-dessus
 
 const gridEl = document.getElementById("grid");
 const boardTopEl = document.getElementById("boardTop");
 const newGameBtn = document.getElementById("newGameBtn");
-
 const statusEl = document.getElementById("status");
 const seqEl = document.getElementById("seq");
-const predEl = document.getElementById("pred");
-const predDot = document.getElementById("predDot");
-const hintEl = document.getElementById("hint");
-const hintDot = document.getElementById("hintDot");
-const hintDetailsEl = document.getElementById("hintDetails");
 const globalStatsEl = document.getElementById("globalStats");
 const optionsEl = document.getElementById("options");
-
-// Analyse situation
-const seqInput = document.getElementById("seqInput");
-const anDepth = document.getElementById("anDepth");
-const anBtn = document.getElementById("anBtn");
-const anRes = document.getElementById("anRes");
-const pvEl = document.getElementById("pv");
 
 function setBusy(v){
   busy = v;
@@ -51,111 +37,22 @@ function setSequence(seq){
   seqEl.textContent = (seq && seq.length) ? seq : "—";
 }
 
-function labelToText(l){
-  if (l === "victoire") return "Victoire possible";
-  if (l === "defaite") return "Risque de défaite";
-  if (l === "nul_ou_equilibre") return "Nul / équilibré";
-  return "Incertain";
-}
-function setPred(label, score, best){
-  if (!label){
-    predEl.textContent = "—";
-    predDot.className = "dot";
-    return;
-  }
-  predEl.textContent = `${labelToText(label)} (score ${score}) — best: col ${best}`;
-  if (label === "victoire") predDot.className = "dot good";
-  else if (label === "defaite") predDot.className = "dot bad";
-  else if (label === "nul_ou_equilibre") predDot.className = "dot warn";
-  else predDot.className = "dot";
-}
-
-function clearHint(){
-  hintEl.textContent = "—";
-  hintDot.className = "dot";
-  hintDetailsEl.innerHTML = "";
-  lastHintBest = null;
-  lastWeights = null;
-}
-
-function renderHint(human_hint){
-  clearHint();
-  if (!human_hint) return;
-
-  lastHintBest = human_hint.best_col;
-
-  hintEl.textContent = `Col ${human_hint.best_col}`;
-  hintDot.className = "dot good";
-
-  if (human_hint.type === "bga"){
-    // weights
-    const w = human_hint.weights || {};
-    lastWeights = { type: "bga", data: w, best: human_hint.best_col };
-
-    const keys = Object.keys(w).sort((a,b)=>Number(a)-Number(b));
-    hintDetailsEl.innerHTML = `<div class="muted">BGA (matches=${human_hint.matches ?? 0})</div>`;
-    if (!keys.length){
-      hintDetailsEl.innerHTML += `<div class="muted">Pas assez de données → fallback minimax faible.</div>`;
-      return;
-    }
-    keys.forEach(k=>{
-      const div = document.createElement("div");
-      div.className = "weightLine";
-      div.textContent = `Col ${k} : ${Number(w[k]).toFixed(2)}`;
-      hintDetailsEl.appendChild(div);
-    });
-    return;
-  }
-
-  // minimax scores
-  const scores = human_hint.scores || {};
-  lastWeights = { type: "minimax", data: scores, best: human_hint.best_col };
-
-  hintDetailsEl.innerHTML = `<div class="muted">Minimax — ${labelToText(human_hint.label)} (score ${human_hint.score})</div>`;
-  Object.keys(scores)
-    .filter(k => scores[k] !== null && scores[k] !== undefined)
-    .sort((a,b)=>Number(a)-Number(b))
-    .forEach(k=>{
-      const div = document.createElement("div");
-      div.className = "weightLine";
-      div.textContent = `Col ${k} : ${scores[k]}`;
-      hintDetailsEl.appendChild(div);
-    });
-}
-
 function renderTopButtons(){
   boardTopEl.innerHTML = "";
   if (!board) return;
   const { cols } = dims();
+  document.documentElement.style.setProperty("--cols", cols);
 
   for (let c = 0; c < cols; c++){
     const wrap = document.createElement("div");
     wrap.className = "colWrap";
 
-    // weight label
-    const w = document.createElement("div");
-    w.className = "colWeight";
-
-    let value = null;
-    if (lastWeights && lastWeights.data){
-      if (lastWeights.type === "bga"){
-        value = (lastWeights.data[c] !== undefined) ? Number(lastWeights.data[c]).toFixed(1) : null;
-      } else {
-        value = (lastWeights.data[c] !== undefined && lastWeights.data[c] !== null) ? String(lastWeights.data[c]) : null;
-      }
-    }
-    w.textContent = value === null ? "—" : value;
-    if (lastHintBest === c) w.classList.add("best");
-
-    // drop btn
     const btn = document.createElement("button");
     btn.className = "dropBtn";
     btn.textContent = "↓";
-    btn.disabled = busy || (currentUIMode === "iaia");
-    if (lastHintBest === c) btn.classList.add("best");
+    btn.disabled = busy || (currentUIMode === "iaia") || !gameId;
     btn.addEventListener("click", () => playMove(c));
 
-    wrap.appendChild(w);
     wrap.appendChild(btn);
     boardTopEl.appendChild(wrap);
   }
@@ -171,17 +68,25 @@ function renderBoard(){
     for (let c = 0; c < cols; c++){
       const cell = document.createElement("div");
       cell.className = "cell";
+
       const isWin = winPos && winPos.some(([lr, lc]) => lr === r && lc === c);
       if (isWin) cell.classList.add("win");
 
       const piece = document.createElement("div");
       piece.className = "piece " + pieceClass(board[r][c]);
-      cell.appendChild(piece);
 
+      // animation uniquement sur le dernier pion joué
+      if (lastMove && lastMove.row === r && lastMove.col === c) {
+        piece.classList.add("drop");
+      }
+
+      cell.appendChild(piece);
       cell.addEventListener("click", () => playMove(c));
+
       gridEl.appendChild(cell);
     }
   }
+
   renderTopButtons();
 }
 
@@ -191,7 +96,7 @@ async function loadStats(){
     const data = await res.json();
     if (!data.ok) throw new Error();
     globalStatsEl.textContent =
-      `Parties: ${data.total} • Victoires Rouge: ${data.rouge} • Victoires Jaune: ${data.jaune} • Nuls: ${data.nuls}`;
+      `Parties: ${data.total} • Rouge: ${data.rouge} • Jaune: ${data.jaune} • Nuls: ${data.nuls} • En cours: ${data.en_cours}`;
   }catch{
     globalStatsEl.textContent = "Stats indisponibles";
   }
@@ -205,25 +110,25 @@ function renderOptions(){
 
   if (currentUIMode === "vsai"){
     optionsEl.innerHTML = `
-      <div class="optGrid">
-        <label>Tu joues
+      <div class="row mt">
+        <label class="muted">Tu joues
           <select id="humanColor" class="sel">
             <option value="R" selected>Rouge</option>
             <option value="J">Jaune</option>
           </select>
         </label>
-        <label>IA
+        <label class="muted">IA
           <select id="aiType" class="sel">
             <option value="random">Aléatoire</option>
             <option value="minimax" selected>Minimax</option>
             <option value="bga">BGA</option>
           </select>
         </label>
-        <label>Profondeur
-          <input id="depth" class="inpSmall" type="number" min="1" max="9" value="4"/>
+        <label class="muted">Profondeur
+          <input id="depth" class="sel" type="number" min="1" max="9" value="4" />
         </label>
-        <label>Délai IA (ms)
-          <input id="delay" class="inpSmall" type="number" min="0" max="2000" value="350"/>
+        <label class="muted">Délai IA (ms)
+          <input id="delay" class="sel" type="number" min="0" max="2000" value="350" />
         </label>
       </div>
     `;
@@ -231,26 +136,26 @@ function renderOptions(){
   }
 
   optionsEl.innerHTML = `
-    <div class="optGrid">
-      <label>IA ROUGE
+    <div class="row mt">
+      <label class="muted">IA Rouge
         <select id="aiR" class="sel">
           <option value="random">Aléatoire</option>
           <option value="minimax" selected>Minimax</option>
           <option value="bga">BGA</option>
         </select>
       </label>
-      <label>IA JAUNE
+      <label class="muted">IA Jaune
         <select id="aiJ" class="sel">
           <option value="random">Aléatoire</option>
           <option value="minimax">Minimax</option>
           <option value="bga" selected>BGA</option>
         </select>
       </label>
-      <label>Profondeur
-        <input id="depth" class="inpSmall" type="number" min="1" max="9" value="4"/>
+      <label class="muted">Profondeur
+        <input id="depth" class="sel" type="number" min="1" max="9" value="4" />
       </label>
-      <label>Délai (ms)
-        <input id="delay" class="inpSmall" type="number" min="0" max="2000" value="250"/>
+      <label class="muted">Délai (ms)
+        <input id="delay" class="sel" type="number" min="0" max="2000" value="250" />
       </label>
       <button id="runBtn" class="btn">▶ Lancer IA/IA</button>
       <button id="stopBtn" class="btn secondary">⏹ Stop</button>
@@ -267,8 +172,11 @@ async function newGame(){
   setBusy(true);
 
   try{
-    clearHint();
-    setPred(null);
+    winPos = null;
+    lastMove = null;
+    board = null;
+    gameId = null;
+    renderTopButtons();
 
     let url = "/new-game?";
     if (currentUIMode === "pvp"){
@@ -296,16 +204,13 @@ async function newGame(){
 
     gameId = data.game_id;
     board = data.plateau;
-    winPos = null;
-
     setSequence(data.sequence || "");
-    statusEl.textContent = `Partie prête — joue une colonne`;
+    statusEl.textContent = "Partie prête — joue une colonne";
 
     if (data.auto?.ia_move !== undefined){
       statusEl.textContent = `L’IA commence (col ${data.auto.ia_move}) — à toi`;
     }
 
-    renderHint(data.human_hint || null);
     renderBoard();
     await loadStats();
   } finally {
@@ -329,15 +234,9 @@ async function playMove(col){
 
     board = data.plateau;
     winPos = data.win_pos || null;
+    lastMove = data.last_move || null;
 
     setSequence(data.sequence || "");
-    if (data.prediction_ai){
-      setPred(data.prediction_ai.label, data.prediction_ai.score, data.prediction_ai.best_col);
-    } else {
-      setPred(null);
-    }
-    renderHint(data.human_hint || null);
-
     renderBoard();
 
     if (data.winner){
@@ -351,7 +250,7 @@ async function playMove(col){
       return;
     }
 
-    if (data.ia_move !== undefined){
+    if (data.ia_move !== undefined && data.ia_move !== null){
       statusEl.textContent = `IA a joué col ${data.ia_move} — à toi`;
     } else if (data.next_player){
       statusEl.textContent = `À ${data.next_player} de jouer`;
@@ -372,9 +271,8 @@ async function stepIAIA(){
   }
   board = data.plateau;
   winPos = data.win_pos || null;
+  lastMove = data.last_move || null;
   setSequence(data.sequence || "");
-  setPred(null);
-  clearHint();
   renderBoard();
 
   if (data.winner){
@@ -387,7 +285,7 @@ async function stepIAIA(){
     await loadStats();
     return { done: true };
   }
-  statusEl.textContent = `IA/IA — coup ${data.ai_move} — à ${data.next_player}`;
+  statusEl.textContent = `IA/IA — dernier coup col ${data.ai_move} — à ${data.next_player}`;
   return { done: false };
 }
 
@@ -402,42 +300,20 @@ async function runIAIA(){
   }
 }
 
-async function analyzeSituation(){
-  const seq = (seqInput.value || "").trim();
-  const d = Number(anDepth.value || 6);
-
-  const res = await fetch(`/api/analyze?sequence=${encodeURIComponent(seq)}&depth=${encodeURIComponent(d)}`);
-  const data = await res.json();
-  if (!data.ok){
-    anRes.textContent = data.error || "Erreur";
-    pvEl.innerHTML = "";
-    return;
-  }
-
-  anRes.textContent = `Joueur: ${data.joueur_a_jouer} — meilleur: col ${data.best_col} — ${labelToText(data.label)} (score ${data.score_best})`;
-  pvEl.innerHTML = "";
-
-  const pv = data.pv || [];
-  if (!pv.length){
-    pvEl.innerHTML = `<div class="muted">Pas de ligne trouvée (augmente la profondeur).</div>`;
-    return;
-  }
-  pv.forEach((m,i)=>{
-    const div = document.createElement("div");
-    div.className = "weightLine";
-    div.textContent = `#${i+1} ${m.joueur} → col ${m.col} (score ${m.score})`;
-    pvEl.appendChild(div);
-  });
-}
-
-anBtn.addEventListener("click", analyzeSituation);
-
 function setMode(mode){
   currentUIMode = mode;
   document.querySelectorAll("button.modeBtn").forEach(b => {
     b.classList.toggle("active", b.dataset.mode === mode);
   });
+  gameId = null;
+  board = null;
+  winPos = null;
+  lastMove = null;
+  setSequence("");
+  statusEl.textContent = "Clique sur “Nouvelle partie”.";
   renderOptions();
+  renderTopButtons();
+  gridEl.innerHTML = "";
 }
 
 document.querySelectorAll("button.modeBtn").forEach(b => {
@@ -448,5 +324,5 @@ newGameBtn.addEventListener("click", newGame);
 
 // init
 renderOptions();
+renderTopButtons();
 loadStats();
-newGame();

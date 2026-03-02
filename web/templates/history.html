@@ -4,11 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Connect4 — Historique</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/style.css?v=20260302">
 </head>
 <body>
 <header class="topbar">
   <div class="brand">CONNECT <span class="brand4">4</span></div>
+  <div class="author">Emma Le Cloirec</div>
   <nav class="tabs">
     <a class="tab" href="/play">Jouer</a>
     <a class="tab active" href="/history">Historique</a>
@@ -22,14 +24,14 @@
     <div class="row">
       <div>
         <h1>Historique</h1>
-        <div class="muted">Filtre + séquence visible + replay</div>
+        <div class="muted">Filtre En cours / Terminées + replay</div>
       </div>
 
       <div class="row">
         <select id="filter" class="sel">
           <option value="all">Toutes</option>
-          <option value="TERMINE">Terminées</option>
           <option value="EN_COURS">En cours</option>
+          <option value="TERMINE">Terminées</option>
         </select>
         <button id="refreshBtn" class="btn">Rafraîchir</button>
       </div>
@@ -43,7 +45,7 @@
       <table class="table">
         <thead>
           <tr>
-            <th>#</th><th>Date</th><th>Coups</th><th>Gagnant</th><th>Statut</th><th>Actions</th>
+            <th>#</th><th>Date</th><th>Coups</th><th>Gagnant</th><th>Statut</th><th>Séquence</th><th>Actions</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -52,5 +54,6 @@
   </section>
 </main>
 
-<script src="/static/history.js" defer></script>
+<script src="/static/history.js?v=20260302" defer></script>
 </body>
+</html>

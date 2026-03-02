@@ -3,12 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Connect4 — BGA</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <title>Connect4 — Import BGA</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/style.css?v=20260302">
 </head>
 <body>
 <header class="topbar">
   <div class="brand">CONNECT <span class="brand4">4</span></div>
+  <div class="author">Emma Le Cloirec</div>
   <nav class="tabs">
     <a class="tab" href="/play">Jouer</a>
     <a class="tab" href="/history">Historique</a>
@@ -19,15 +21,19 @@
 
 <main class="page">
   <section class="card">
-    <h1>BGA</h1>
-    <div class="muted">Espace dédié à ton import BGA (tes scripts, consignes, etc.)</div>
+    <h1>Importer une partie depuis BGA</h1>
+    <div class="muted">Colle le <b>table_id</b> (dans l’URL gamereview). Exemple : gamereview?table=123456</div>
 
-    <div class="cardInner mt">
-      <h3>Importer une table</h3>
-      <pre class="code">python scrapping.py --table NUMERO_TABLE</pre>
-      <div class="muted">Après import, tu vois les parties dans l’Historique.</div>
+    <div class="row mt">
+      <input id="tableId" class="inp" placeholder="123456" />
+      <button id="importBtn" class="btn">Importer</button>
     </div>
+
+    <div id="importStatus" class="mt statusLine">—</div>
+    <div class="mt muted">Après import, tu peux voir la partie dans Historique puis Replay.</div>
   </section>
 </main>
+
+<script src="/static/bga.js?v=20260302" defer></script>
 </body>
 </html>
