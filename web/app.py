@@ -16,8 +16,6 @@ from core.database import db_connexion, safe_query, db_creer_partie, db_ajouter_
 from core.modele import creer_plateau, coup_valide, jouer_coup, changer_joueur, verifier_victoire, plateau_plein
 from core.ia import coup_aleatoire, coup_minimax
 
-from scripts.bga_scraper import BGAScraper
-
 ModeUI = Literal["pvp", "vsai", "iaia"]
 AIType = Literal["random", "minimax", "bga"]
 
@@ -317,6 +315,14 @@ def api_bga_import(table_id: int = Query(..., ge=1)):
     Importe une partie BGA depuis un table_id gamereview.
     -> crée une partie en DB + coups.
     """
+    try:
+        from scripts.bga_scraper import BGAScraper 
+    except ModuleNotFoundError:
+        return {
+            "ok": False,
+            "error": "Import BGA indisponible sur render (selenium non installé). Lance l'import en local, ou installe selenium."
+        }
+        
     scraper = BGAScraper(headless=True)
     try:
         moves = scraper.get_moves_with_colors_from_table(table_id)
