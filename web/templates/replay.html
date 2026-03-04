@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Connect4 — Import BGA</title>
+  <title>Connect4 — Replay</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="/static/style.css?v=20260302">
+  <link rel="stylesheet" href="/static/style.css?v=20260304">
 </head>
 <body>
 <header class="topbar">
@@ -14,26 +14,30 @@
   <nav class="tabs">
     <a class="tab" href="/play">Jouer</a>
     <a class="tab" href="/history">Historique</a>
-    <a class="tab active" href="/bga">BGA</a>
+    <a class="tab" href="/bga">BGA</a>
     <a class="tab" href="/about">Soutenance</a>
   </nav>
 </header>
 
-<main class="page">
+<main class="page grid2">
   <section class="card">
-    <h1>Importer une partie depuis BGA</h1>
-    <div class="muted">Colle le <b>table_id</b> (dans l’URL gamereview). Exemple : gamereview?table=123456</div>
+    <h1>Replay</h1>
+    <div id="meta" class="muted mt">—</div>
 
     <div class="row mt">
-      <input id="tableId" class="inp" placeholder="123456" />
-      <button id="importBtn" class="btn">Importer</button>
+      <button id="prevBtn" class="btn secondary">◀</button>
+      <button id="nextBtn" class="btn">▶</button>
+      <button id="endBtn" class="btn">Fin</button>
     </div>
 
-    <div id="importStatus" class="mt statusLine">—</div>
-    <div class="mt muted">Après import, tu peux voir la partie dans Historique puis Replay.</div>
+    <div id="stepInfo" class="mt statusLine">—</div>
+  </section>
+
+  <section class="boardArea">
+    <div class="board"><div id="grid"></div></div>
   </section>
 </main>
 
-<script src="/static/bga.js?v=20260302" defer></script>
+<script src="/static/replay.js?v=20260304" defer></script>
 </body>
 </html>
