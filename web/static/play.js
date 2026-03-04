@@ -5,6 +5,7 @@ let lastMove = null;
 let busy = false;
 
 let currentUIMode = "pvp"; // pvp|vsai|iaia
+let editorEnabled = false;
 
 const gridEl = document.getElementById("grid");
 const boardTopEl = document.getElementById("boardTop");
@@ -13,6 +14,22 @@ const statusEl = document.getElementById("status");
 const seqEl = document.getElementById("seq");
 const globalStatsEl = document.getElementById("globalStats");
 const optionsEl = document.getElementById("options");
+
+const verdictEl = document.getElementById("verdict");
+const bestMoveEl = document.getElementById("bestMove");
+const pvLineEl = document.getElementById("pvLine");
+const analysisDepthEl = document.getElementById("analysisDepth");
+const assistHumanEl = document.getElementById("assistHuman");
+
+const seqInputEl = document.getElementById("seqInput");
+const seqPlayerEl = document.getElementById("seqPlayer");
+const analyzeSeqBtn = document.getElementById("analyzeSeqBtn");
+
+const toggleEditorBtn = document.getElementById("toggleEditorBtn");
+const analyzeBoardBtn = document.getElementById("analyzeBoardBtn");
+const clearBoardBtn = document.getElementById("clearBoardBtn");
+
+let lastAnalysis = null;
 
 function setBusy(v){
   busy = v;
@@ -37,6 +54,82 @@ function setSequence(seq){
   seqEl.textContent = (seq && seq.length) ? seq : "—";
 }
 
+function setAnalysisUIEmpty(){
+  verdictEl.textContent = "—";
+  bestMoveEl.textContent = "—";
+  pvLineEl.textContent = "";
+  lastAnalysis = null;
+  applyAnalysisToUI();
+}
+
+function normalizeScore(v){
+  if (v === null || v === undefined) return {h:0, neg:false};
+  const x = Math.max(-100000, Math.min(100000, Number(v)));
+  const h = Math.round((Math.abs(x) / 100000) * 100);
+  return {h, neg: x < 0};
+}
+
+function applyAnalysisToUI(){
+  document.querySelectorAll(".colWrap").forEach(w => w.classList.remove("best"));
+
+  if (!lastAnalysis || !lastAnalysis.scores) return;
+
+  const scores = lastAnalysis.scores;
+  const bestCol = lastAnalysis.best_col;
+
+  for (let c = 0; c < scores.length; c++){
+    const wrap = boardTopEl.querySelector(`.colWrap[data-col="${c}"]`);
+    if (!wrap) continue;
+    const bar = wrap.querySelector(".weightBar");
+    if (!bar) continue;
+
+    const val = scores[c];
+    if (val === null){
+      bar.style.height = "0%";
+      bar.classList.remove("neg");
+      continue;
+    }
+
+    const {h, neg} = normalizeScore(val);
+    bar.style.height = `${Math.max(8, h)}%`;
+    bar.classList.toggle("neg", neg);
+  }
+
+  if (bestCol !== null && bestCol !== undefined){
+    const bw = boardTopEl.querySelector(`.colWrap[data-col="${bestCol}"]`);
+    if (bw) bw.classList.add("best");
+  }
+
+  verdictEl.textContent = lastAnalysis.verdict || "—";
+  bestMoveEl.textContent = (bestCol === null || bestCol === undefined) ? "—" : String(bestCol);
+
+  if (lastAnalysis.pv && lastAnalysis.pv.length){
+    pvLineEl.textContent = `Ligne proposée : ${lastAnalysis.pv.join(" → ")}`;
+  } else {
+    pvLineEl.textContent = "";
+  }
+}
+
+async function fetchAnalysis(){
+  // analyse uniquement si partie live
+  if (!gameId || !board) return;
+
+  const depth = Number(analysisDepthEl?.value || 4);
+
+  let forPlayer = "R";
+  if (currentUIMode === "vsai" && assistHumanEl?.checked){
+    forPlayer = document.getElementById("humanColor")?.value || "R";
+  }
+
+  try{
+    const res = await fetch(`/api/analyze/${gameId}?for_player=${encodeURIComponent(forPlayer)}&depth=${encodeURIComponent(depth)}`);
+    const data = await res.json();
+    if (!data.ok) return;
+    lastAnalysis = data;
+    applyAnalysisToUI();
+  }catch{}
+}
+
 function renderTopButtons(){
   boardTopEl.innerHTML = "";
   if (!board) return;
@@ -46,16 +139,34 @@ function renderTopButtons(){
   for (let c = 0; c < cols; c++){
     const wrap = document.createElement("div");
     wrap.className = "colWrap";
+    wrap.dataset.col = String(c);
 
     const btn = document.createElement("button");
     btn.className = "dropBtn";
     btn.textContent = "↓";
-    btn.disabled = busy || (currentUIMode === "iaia") || !gameId;
+    btn.disabled = busy || (currentUIMode === "iaia") || !gameId || editorEnabled;
     btn.addEventListener("click", () => playMove(c));
 
+    const barWrap = document.createElement("div");
+    barWrap.className = "weightBarWrap";
+
+    const bar = document.createElement("div");
+    bar.className = "weightBar";
+    bar.style.height = "0%";
+    barWrap.appendChild(bar);
+
     wrap.appendChild(btn);
+    wrap.appendChild(barWrap);
     boardTopEl.appendChild(wrap);
   }
+
+  applyAnalysisToUI();
+}
+
+function cellCycleValue(v){
+  if (v === ".") return "R";
+  if (v === "R") return "J";
+  return ".";
 }
 
 function renderBoard(){
@@ -68,6 +179,8 @@ function renderBoard(){
     for (let c = 0; c < cols; c++){
       const cell = document.createElement("div");
       cell.className = "cell";
+      cell.dataset.r = String(r);
+      cell.dataset.c = String(c);
 
       const isWin = winPos && winPos.some(([lr, lc]) => lr === r && lc === c);
       if (isWin) cell.classList.add("win");
@@ -75,13 +188,24 @@ function renderBoard(){
       const piece = document.createElement("div");
       piece.className = "piece " + pieceClass(board[r][c]);
 
-      // animation uniquement sur le dernier pion joué
       if (lastMove && lastMove.row === r && lastMove.col === c) {
         piece.classList.add("drop");
       }
 
       cell.appendChild(piece);
-      cell.addEventListener("click", () => playMove(c));
+
+      cell.addEventListener("click", async () => {
+        if (editorEnabled){
+          // editor: cycle value
+          board[r][c] = cellCycleValue(board[r][c]);
+          lastMove = null;
+          winPos = null;
+          renderBoard();
+          return;
+        }
+        // normal play: play column
+        await playMove(c);
+      });
 
       gridEl.appendChild(cell);
     }
@@ -172,10 +296,14 @@ async function newGame(){
   setBusy(true);
 
   try{
+    editorEnabled = false;
+    toggleEditorBtn.textContent = "Activer l’éditeur";
+
     winPos = null;
     lastMove = null;
     board = null;
     gameId = null;
+    setAnalysisUIEmpty();
     renderTopButtons();
 
     let url = "/new-game?";
@@ -213,6 +341,7 @@ async function newGame(){
 
     renderBoard();
     await loadStats();
+    await fetchAnalysis();
   } finally {
     setBusy(false);
   }
@@ -221,6 +350,7 @@ async function newGame(){
 async function playMove(col){
   if (!gameId || busy) return;
   if (currentUIMode === "iaia") return;
+  if (editorEnabled) return;
 
   setBusy(true);
   try{
@@ -238,6 +368,7 @@ async function playMove(col){
 
     setSequence(data.sequence || "");
     renderBoard();
+    await fetchAnalysis();
 
     if (data.winner){
       statusEl.textContent = `🎉 Victoire ${data.winner}`;
@@ -309,11 +440,92 @@ function setMode(mode){
   board = null;
   winPos = null;
   lastMove = null;
+  editorEnabled = false;
+  toggleEditorBtn.textContent = "Activer l’éditeur";
   setSequence("");
+  setAnalysisUIEmpty();
   statusEl.textContent = "Clique sur “Nouvelle partie”.";
   renderOptions();
   renderTopButtons();
   gridEl.innerHTML = "";
+}
+
+async function analyzeSequence(){
+  const seq = (seqInputEl?.value || "").trim();
+  const p = seqPlayerEl?.value || "R";
+  const depth = Number(analysisDepthEl?.value || 5);
+
+  try{
+    const res = await fetch(`/api/analyze_sequence?sequence=${encodeURIComponent(seq)}&for_player=${encodeURIComponent(p)}&depth=${encodeURIComponent(depth)}`);
+    const data = await res.json();
+    if (!data.ok){
+      statusEl.textContent = data.error || "Erreur analyse séquence";
+      return;
+    }
+
+    // affiche la position analysée
+    gameId = null;
+    editorEnabled = false;
+    toggleEditorBtn.textContent = "Activer l’éditeur";
+
+    board = data.plateau;
+    winPos = null;
+    lastMove = null;
+    lastAnalysis = data;
+
+    setSequence(data.sequence_applied || "");
+    statusEl.textContent = `Analyse OK — Verdict: ${data.verdict} — Meilleur coup: ${data.best_col}`;
+    renderBoard();
+  }catch{
+    statusEl.textContent = "Erreur réseau";
+  }
+}
+
+function emptyBoard(rows, cols){
+  return Array.from({length: rows}, () => Array.from({length: cols}, () => "."));
+}
+
+async function analyzeBoard(){
+  if (!board) return;
+  const p = seqPlayerEl?.value || "R";
+  const depth = Number(analysisDepthEl?.value || 5);
+
+  try{
+    const res = await fetch(`/api/analyze_board?for_player=${encodeURIComponent(p)}&depth=${encodeURIComponent(depth)}`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(board),
+    });
+    const data = await res.json();
+    if (!data.ok){
+      statusEl.textContent = data.error || "Erreur analyse plateau";
+      return;
+    }
+    lastAnalysis = data;
+    statusEl.textContent = `Analyse plateau — Verdict: ${data.verdict} — Meilleur coup: ${data.best_col}`;
+    renderTopButtons();
+  }catch{
+    statusEl.textContent = "Erreur réseau";
+  }
+}
+
+function toggleEditor(){
+  editorEnabled = !editorEnabled;
+  toggleEditorBtn.textContent = editorEnabled ? "Désactiver l’éditeur" : "Activer l’éditeur";
+  statusEl.textContent = editorEnabled
+    ? "Éditeur actif : clique les cases (R → J → vide), puis “Analyser le plateau”."
+    : "Éditeur désactivé.";
+  renderTopButtons();
+}
+
+function clearBoard(){
+  const {rows, cols} = dims();
+  board = emptyBoard(rows || 9, cols || 9);
+  winPos = null;
+  lastMove = null;
+  setSequence("");
+  setAnalysisUIEmpty();
+  renderBoard();
 }
 
 document.querySelectorAll("button.modeBtn").forEach(b => {
@@ -321,8 +533,15 @@ document.querySelectorAll("button.modeBtn").forEach(b => {
 });
 
 newGameBtn.addEventListener("click", newGame);
+analyzeSeqBtn.addEventListener("click", analyzeSequence);
+
+toggleEditorBtn.addEventListener("click", toggleEditor);
+analyzeBoardBtn.addEventListener("click", analyzeBoard);
+clearBoardBtn.addEventListener("click", clearBoard);
+
+analysisDepthEl.addEventListener("change", () => { if (gameId) fetchAnalysis(); });
+assistHumanEl.addEventListener("change", () => { if (gameId) fetchAnalysis(); });
 
 // init
 renderOptions();
-renderTopButtons();
 loadStats();

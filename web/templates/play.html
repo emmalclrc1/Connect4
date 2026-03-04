@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Connect4 — Jouer</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="/static/style.css?v=20260302">
+  <link rel="stylesheet" href="/static/style.css?v=20260304">
 </head>
 <body>
 <header class="topbar">
@@ -39,6 +39,42 @@
 
     <div class="mt pills">
       <span class="pill"><span class="dot"></span> Séquence: <span id="seq">—</span></span>
+      <span class="pill">Prédiction: <b id="verdict">—</b></span>
+      <span class="pill">Meilleur coup: <b id="bestMove">—</b></span>
+    </div>
+
+    <div class="mt muted" id="pvLine"></div>
+
+    <div class="mt row">
+      <label class="muted">Analyse (profondeur)
+        <input id="analysisDepth" class="sel" type="number" min="1" max="9" value="4" />
+      </label>
+
+      <label class="muted" style="display:flex;align-items:center;gap:8px;">
+        Coaching humain
+        <input id="assistHuman" type="checkbox" checked />
+      </label>
+    </div>
+
+    <div class="mt">
+      <div class="muted">Soutenance : analyser une séquence (ex: 3,3,4,2)</div>
+      <div class="row mt">
+        <input id="seqInput" class="inp" placeholder="Ex: 3,3,4,2" />
+        <select id="seqPlayer" class="sel">
+          <option value="R" selected>Point de vue Rouge</option>
+          <option value="J">Point de vue Jaune</option>
+        </select>
+        <button id="analyzeSeqBtn" class="btn secondary">Analyser</button>
+      </div>
+    </div>
+
+    <div class="mt">
+      <div class="muted">Soutenance : éditeur de plateau (clic case = R → J → vide)</div>
+      <div class="row mt">
+        <button id="toggleEditorBtn" class="btn secondary">Activer l’éditeur</button>
+        <button id="analyzeBoardBtn" class="btn secondary">Analyser le plateau</button>
+        <button id="clearBoardBtn" class="btn secondary">Vider</button>
+      </div>
     </div>
 
     <div class="mt muted" id="globalStats">Stats...</div>
@@ -54,6 +90,6 @@
   </section>
 </main>
 
-<script src="/static/play.js?v=20260302" defer></script>
+<script src="/static/play.js?v=20260304" defer></script>
 </body>
 </html>

@@ -4,7 +4,7 @@ import asyncio
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, Literal, Optional
+from typing import Dict, Literal, Optional, List, Tuple
 from uuid import uuid4
 
 from fastapi import FastAPI, Query
@@ -13,7 +13,14 @@ from fastapi.staticfiles import StaticFiles
 
 from core.config import ROUGE, JAUNE, LIGNES, COLONNES
 from core.database import db_connexion, safe_query, db_creer_partie, db_ajouter_coup
-from core.modele import creer_plateau, coup_valide, jouer_coup, changer_joueur, verifier_victoire, plateau_plein
+from core.modele import (
+    creer_plateau,
+    coup_valide,
+    jouer_coup,
+    changer_joueur,
+    verifier_victoire,
+    plateau_plein,
+)
 from core.ia import coup_aleatoire, coup_minimax
 
 ModeUI = Literal["pvp", "vsai", "iaia"]
@@ -112,7 +119,6 @@ def _db_add_move(game: dict, joueur: str, col: int):
 
 def _finish_db_game(game: dict, gagnant: Optional[str], draw: bool):
     if game.get("id_partie") is None:
-        # pas de coups => pas de partie => rien à terminer
         return
     pid = int(game["id_partie"])
     seq = ",".join(str(c) for c in game["coups"])
@@ -140,10 +146,214 @@ def _ai_choose(ai_type: AIType, plateau, joueur_ia: str, depth: int) -> Optional
         col, _ = coup_minimax(plateau, joueur_ia, profondeur=depth)
         return col
     if ai_type == "bga":
-        # fallback simple si pas de BDD d'apprentissage / pas branché ici
         col, _ = coup_minimax(plateau, joueur_ia, profondeur=max(2, min(depth, 5)))
         return col
     return None
+
+
+# -------------------------
+# ANALYSE (poids, verdict, PV)
+# -------------------------
+def _deepcopy_plateau(plateau):
+    return [row[:] for row in plateau]
+
+
+def _apply_move(plateau, col: int, joueur: str) -> Optional[Tuple[int, int]]:
+    if not coup_valide(plateau, col):
+        return None
+    row = jouer_coup(plateau, col, joueur)
+    return (row, col)
+
+
+def _verdict_from_scores(scores: dict, profondeur: int) -> str:
+    vals = [v for v in scores.values() if v is not None]
+    if not vals:
+        return "INCERTAIN"
+    best = max(vals)
+
+    if best >= 100000:
+        return "VICTOIRE"
+    if best <= -100000:
+        return "DEFAITE"
+
+    if profondeur >= 5 and abs(best) < 80:
+        return "NUL"
+
+    return "INCERTAIN"
+
+
+def _pv_find_win_line(plateau, joueur: str, profondeur: int, max_len: int = 12) -> Optional[List[int]]:
+    """
+    Retourne une ligne (PV) sous forme d'une liste de colonnes.
+    """
+    cp = _deepcopy_plateau(plateau)
+    seq: List[int] = []
+    current = joueur
+    adv = changer_joueur(joueur)
+
+    for _ in range(max_len):
+        if verifier_victoire(cp, joueur):
+            return seq
+        if verifier_victoire(cp, adv) or plateau_plein(cp) or profondeur <= 0:
+            return None
+
+        if current == joueur:
+            best_col, _scores = coup_minimax(cp, joueur, profondeur)
+            if best_col is None:
+                return None
+            _apply_move(cp, best_col, current)
+            seq.append(best_col)
+        else:
+            # réponse adverse "méchante"
+            worst_col = None
+            worst_for_player = 10**9
+
+            for c in range(COLONNES):
+                if not coup_valide(cp, c):
+                    continue
+                test = _deepcopy_plateau(cp)
+                _apply_move(test, c, adv)
+                if verifier_victoire(test, adv):
+                    worst_col = c
+                    worst_for_player = -100000
+                    break
+
+                _, sc = coup_minimax(test, joueur, max(1, profondeur - 1))
+                vals = [v for v in sc.values() if v is not None]
+                approx = max(vals) if vals else 0
+                if approx < worst_for_player:
+                    worst_for_player = approx
+                    worst_col = c
+
+            if worst_col is None:
+                return None
+            _apply_move(cp, worst_col, current)
+            seq.append(worst_col)
+
+        current = changer_joueur(current)
+        profondeur -= 1
+
+    return None
+
+
+@app.get("/api/analyze/{game_id}")
+def api_analyze(
+    game_id: str,
+    for_player: str = Query(..., pattern="^(R|J)$"),
+    depth: int = Query(4, ge=1, le=9),
+):
+    game = games.get(game_id)
+    if not game:
+        return {"ok": False, "error": "Game not found"}
+
+    plateau = game["plateau"]
+    best_col, scores = coup_minimax(plateau, for_player, profondeur=depth)
+    verdict = _verdict_from_scores(scores, depth)
+    pv = _pv_find_win_line(plateau, for_player, depth, max_len=12) if verdict == "VICTOIRE" else None
+
+    scores_list = []
+    for c in range(COLONNES):
+        v = scores.get(c, None)
+        scores_list.append(None if v is None else int(v))
+
+    return {
+        "ok": True,
+        "for_player": for_player,
+        "depth": depth,
+        "scores": scores_list,
+        "best_col": best_col,
+        "verdict": verdict,
+        "pv": pv,
+    }
+
+
+@app.get("/api/analyze_sequence")
+def api_analyze_sequence(
+    sequence: str = Query("", description="Ex: 3,3,4,2"),
+    for_player: str = Query("R", pattern="^(R|J)$"),
+    depth: int = Query(5, ge=1, le=9),
+):
+    plateau = creer_plateau()
+    joueur = ROUGE
+    coups = []
+
+    if sequence.strip():
+        parts = [p.strip() for p in sequence.split(",") if p.strip()]
+        for p in parts:
+            try:
+                col = int(p)
+            except Exception:
+                return {"ok": False, "error": "Séquence invalide (entiers séparés par des virgules)"}
+
+            if col < 0 or col >= COLONNES or not coup_valide(plateau, col):
+                return {"ok": False, "error": f"Coup invalide dans la séquence : {col}"}
+
+            jouer_coup(plateau, col, joueur)
+            coups.append(col)
+
+            if verifier_victoire(plateau, joueur) or plateau_plein(plateau):
+                break
+            joueur = changer_joueur(joueur)
+
+    best_col, scores = coup_minimax(plateau, for_player, profondeur=depth)
+    verdict = _verdict_from_scores(scores, depth)
+    pv = _pv_find_win_line(plateau, for_player, depth, max_len=14) if verdict == "VICTOIRE" else None
+
+    scores_list = []
+    for c in range(COLONNES):
+        v = scores.get(c, None)
+        scores_list.append(None if v is None else int(v))
+
+    return {
+        "ok": True,
+        "plateau": plateau,
+        "sequence_applied": ",".join(map(str, coups)),
+        "for_player": for_player,
+        "depth": depth,
+        "scores": scores_list,
+        "best_col": best_col,
+        "verdict": verdict,
+        "pv": pv,
+    }
+
+
+@app.post("/api/analyze_board")
+def api_analyze_board(
+    board: List[List[str]],
+    for_player: str = Query("R", pattern="^(R|J)$"),
+    depth: int = Query(5, ge=1, le=9),
+):
+    """
+    Analyse une position "éditée" côté front.
+    board: matrice de '.' 'R' 'J' de taille LIGNES x COLONNES
+    """
+    if not isinstance(board, list) or len(board) != LIGNES:
+        return {"ok": False, "error": "Board invalide (lignes)"}
+    for r in range(LIGNES):
+        if not isinstance(board[r], list) or len(board[r]) != COLONNES:
+            return {"ok": False, "error": "Board invalide (colonnes)"}
+        for c in range(COLONNES):
+            if board[r][c] not in (".", "R", "J"):
+                return {"ok": False, "error": "Board invalide (valeurs)"}
+
+    best_col, scores = coup_minimax(board, for_player, profondeur=depth)
+    verdict = _verdict_from_scores(scores, depth)
+    pv = _pv_find_win_line(board, for_player, depth, max_len=14) if verdict == "VICTOIRE" else None
+
+    scores_list = []
+    for c in range(COLONNES):
+        v = scores.get(c, None)
+        scores_list.append(None if v is None else int(v))
+
+    return {
+        "ok": True,
+        "for_player": for_player,
+        "depth": depth,
+        "scores": scores_list,
+        "best_col": best_col,
+        "verdict": verdict,
+        "pv": pv,
+    }
 
 
 # -------------------------
@@ -311,25 +521,20 @@ def api_about_details():
 # -------------------------
 @app.post("/api/bga/import")
 def api_bga_import(table_id: int = Query(..., ge=1)):
-    """
-    Importe une partie BGA depuis un table_id gamereview.
-    -> crée une partie en DB + coups.
-    """
     try:
-        from scripts.bga_scraper import BGAScraper 
+        from scripts.bga_scraper import BGAScraper
     except ModuleNotFoundError:
         return {
             "ok": False,
-            "error": "Import BGA indisponible sur render (selenium non installé). Lance l'import en local, ou installe selenium."
+            "error": "Import BGA indisponible sur render (selenium non installé). Lance l'import en local, ou installe selenium.",
         }
-        
+
     scraper = BGAScraper(headless=True)
     try:
         moves = scraper.get_moves_with_colors_from_table(table_id)
         if not moves:
             return {"ok": False, "error": "Impossible de lire la partie (non loggée / replay limité / format inconnu)."}
 
-        # Convertit colonnes BGA (1..N) -> 0..N-1
         seq = [col - 1 for (_color, col) in moves]
         if any(c < 0 for c in seq):
             return {"ok": False, "error": "Colonnes invalides récupérées."}
@@ -346,7 +551,7 @@ def api_bga_import(table_id: int = Query(..., ge=1)):
             for i, col in enumerate(seq):
                 if not coup_valide(plateau, col):
                     break
-                row = jouer_coup(plateau, col, joueur)
+                jouer_coup(plateau, col, joueur)
                 coups.append(col)
                 db_ajouter_coup(conn, pid, i, joueur, col)
 
@@ -359,7 +564,6 @@ def api_bga_import(table_id: int = Query(..., ge=1)):
                     break
                 joueur = changer_joueur(joueur)
 
-            # termine
             seq_str = ",".join(str(c) for c in coups)
             safe_query(
                 conn,
@@ -392,7 +596,6 @@ async def new_game(
     plateau = creer_plateau()
     game_id = uuid4().hex
 
-    # internal roles
     if mode == "pvp":
         internal = {"kind": "pvp"}
     elif mode == "vsai":
@@ -407,7 +610,7 @@ async def new_game(
         "winner": None,
         "win_pos": None,
         "coups": [],
-        "id_partie": None,  # <-- LAZY DB
+        "id_partie": None,
         "depth": int(depth),
         "delay_ms": int(delay_ms),
         "internal": internal,
@@ -415,7 +618,6 @@ async def new_game(
     }
 
     auto = None
-    # Si vsai et l'humain est JAUNE, l'IA (ROUGE) commence
     if internal["kind"] == "vsai" and internal["ai"] == ROUGE:
         await asyncio.sleep(delay_ms / 1000.0)
         col = _ai_choose(internal["ai_type"], plateau, ROUGE, int(depth))
@@ -452,7 +654,6 @@ async def move(game_id: str, col: int = Query(..., ge=0, le=50)):
         plateau = game["plateau"]
         joueur = game["joueur"]
 
-        # humain joue (pvp ou vsai)
         if not coup_valide(plateau, col):
             return {"ok": False, "error": "Coup invalide"}
 
@@ -490,10 +691,8 @@ async def move(game_id: str, col: int = Query(..., ge=0, le=50)):
                 "last_move": game["last_move"],
             }
 
-        # switch
         game["joueur"] = changer_joueur(joueur)
 
-        # IA répond si vsai
         ia_move = None
         if internal["kind"] == "vsai" and game["joueur"] == internal["ai"]:
             await asyncio.sleep(game["delay_ms"] / 1000.0)

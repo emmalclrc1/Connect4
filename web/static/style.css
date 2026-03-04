@@ -214,3 +214,32 @@ h3{ font-size:16px; }
   background:rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.10);
 }
+
+/* ---- Weights / coaching ---- */
+.weightBarWrap{
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.12);
+  overflow: hidden;
+  position: relative;
+}
+
+.weightBar{
+  position:absolute;
+  left:0; right:0;
+  bottom:0;
+  height: 0%;
+  background: rgba(79,124,255,.35);
+}
+
+.weightBar.neg{
+  top:0;
+  bottom:auto;
+  background: rgba(239,68,68,.35);
+}
+
+.colWrap.best .dropBtn{
+  outline: 2px solid rgba(79,124,255,.85);
+  outline-offset: 2px;
+}
