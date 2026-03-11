@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, Literal, Optional, List, Tuple
 from uuid import uuid4
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Body
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -94,6 +94,74 @@ def root():
 
 
 # -------------------------
+# Helpers
+# -------------------------
+def _deepcopy_plateau(plateau):
+    return [row[:] for row in plateau]
+
+
+def _serialize_game(game: dict):
+    return {
+        "plateau": game["plateau"],
+        "sequence": ",".join(str(c) for c in game["coups"]),
+        "winner": game["winner"],
+        "finished": game["finished"],
+        "win_pos": game["win_pos"],
+        "last_move": game["last_move"],
+        "next_player": None if game["finished"] else game["joueur"],
+    }
+
+
+def _current_existing_winner(plateau):
+    wp_r = verifier_victoire(plateau, ROUGE)
+    if wp_r:
+        return ROUGE, wp_r
+    wp_j = verifier_victoire(plateau, JAUNE)
+    if wp_j:
+        return JAUNE, wp_j
+    return None, None
+
+
+def _count_pieces(plateau):
+    r = 0
+    j = 0
+    for row in plateau:
+        for cell in row:
+            if cell == ROUGE:
+                r += 1
+            elif cell == JAUNE:
+                j += 1
+    return r, j
+
+
+def _build_mode_summary(game: dict):
+    internal = game["internal"]
+    joueur = game["joueur"]
+
+    if internal["kind"] == "pvp":
+        return {
+            "mode": "Humain vs Humain",
+            "detail": "Deux joueurs humains",
+            "turn": joueur,
+        }
+
+    if internal["kind"] == "vsai":
+        human = internal["human"]
+        ai = internal["ai"]
+        return {
+            "mode": "Humain vs IA",
+            "detail": f"Humain : {human} • IA : {ai} ({internal['ai_type']})",
+            "turn": joueur,
+        }
+
+    return {
+        "mode": "IA vs IA",
+        "detail": f"Rouge : {internal['ai_for']['R']} • Jaune : {internal['ai_for']['J']}",
+        "turn": joueur,
+    }
+
+
+# -------------------------
 # DB helpers (lazy create)
 # -------------------------
 def _ensure_db_game(game: dict) -> int:
@@ -154,10 +222,6 @@ def _ai_choose(ai_type: AIType, plateau, joueur_ia: str, depth: int) -> Optional
 # -------------------------
 # ANALYSE (poids, verdict, PV)
 # -------------------------
-def _deepcopy_plateau(plateau):
-    return [row[:] for row in plateau]
-
-
 def _apply_move(plateau, col: int, joueur: str) -> Optional[Tuple[int, int]]:
     if not coup_valide(plateau, col):
         return None
@@ -183,9 +247,6 @@ def _verdict_from_scores(scores: dict, profondeur: int) -> str:
 
 
 def _pv_find_win_line(plateau, joueur: str, profondeur: int, max_len: int = 12) -> Optional[List[int]]:
-    """
-    Retourne une ligne (PV) sous forme d'une liste de colonnes.
-    """
     cp = _deepcopy_plateau(plateau)
     seq: List[int] = []
     current = joueur
@@ -204,7 +265,6 @@ def _pv_find_win_line(plateau, joueur: str, profondeur: int, max_len: int = 12) 
             _apply_move(cp, best_col, current)
             seq.append(best_col)
         else:
-            # réponse adverse "méchante"
             worst_col = None
             worst_for_player = 10**9
 
@@ -247,6 +307,21 @@ def api_analyze(
         return {"ok": False, "error": "Game not found"}
 
     plateau = game["plateau"]
+
+    existing_winner, existing_win_pos = _current_existing_winner(plateau)
+    if existing_winner:
+        return {
+            "ok": True,
+            "for_player": for_player,
+            "depth": depth,
+            "scores": [None for _ in range(COLONNES)],
+            "best_col": None,
+            "verdict": "VICTOIRE" if existing_winner == for_player else "DEFAITE",
+            "pv": [],
+            "existing_winner": existing_winner,
+            "winning_cells": existing_win_pos,
+        }
+
     best_col, scores = coup_minimax(plateau, for_player, profondeur=depth)
     verdict = _verdict_from_scores(scores, depth)
     pv = _pv_find_win_line(plateau, for_player, depth, max_len=12) if verdict == "VICTOIRE" else None
@@ -264,6 +339,8 @@ def api_analyze(
         "best_col": best_col,
         "verdict": verdict,
         "pv": pv,
+        "existing_winner": None,
+        "winning_cells": None,
     }
 
 
@@ -295,6 +372,22 @@ def api_analyze_sequence(
                 break
             joueur = changer_joueur(joueur)
 
+    existing_winner, existing_win_pos = _current_existing_winner(plateau)
+    if existing_winner:
+        return {
+            "ok": True,
+            "plateau": plateau,
+            "sequence_applied": ",".join(map(str, coups)),
+            "for_player": for_player,
+            "depth": depth,
+            "scores": [None for _ in range(COLONNES)],
+            "best_col": None,
+            "verdict": "VICTOIRE" if existing_winner == for_player else "DEFAITE",
+            "pv": [],
+            "existing_winner": existing_winner,
+            "winning_cells": existing_win_pos,
+        }
+
     best_col, scores = coup_minimax(plateau, for_player, profondeur=depth)
     verdict = _verdict_from_scores(scores, depth)
     pv = _pv_find_win_line(plateau, for_player, depth, max_len=14) if verdict == "VICTOIRE" else None
@@ -314,19 +407,17 @@ def api_analyze_sequence(
         "best_col": best_col,
         "verdict": verdict,
         "pv": pv,
+        "existing_winner": None,
+        "winning_cells": None,
     }
 
 
 @app.post("/api/analyze_board")
 def api_analyze_board(
-    board: List[List[str]],
+    board: List[List[str]] = Body(...),
     for_player: str = Query("R", pattern="^(R|J)$"),
     depth: int = Query(5, ge=1, le=9),
 ):
-    """
-    Analyse une position "éditée" côté front.
-    board: matrice de '.' 'R' 'J' de taille LIGNES x COLONNES
-    """
     if not isinstance(board, list) or len(board) != LIGNES:
         return {"ok": False, "error": "Board invalide (lignes)"}
     for r in range(LIGNES):
@@ -335,6 +426,20 @@ def api_analyze_board(
         for c in range(COLONNES):
             if board[r][c] not in (".", "R", "J"):
                 return {"ok": False, "error": "Board invalide (valeurs)"}
+
+    existing_winner, existing_win_pos = _current_existing_winner(board)
+    if existing_winner:
+        return {
+            "ok": True,
+            "for_player": for_player,
+            "depth": depth,
+            "scores": [None for _ in range(COLONNES)],
+            "best_col": None,
+            "verdict": "VICTOIRE" if existing_winner == for_player else "DEFAITE",
+            "pv": [],
+            "existing_winner": existing_winner,
+            "winning_cells": existing_win_pos,
+        }
 
     best_col, scores = coup_minimax(board, for_player, profondeur=depth)
     verdict = _verdict_from_scores(scores, depth)
@@ -353,6 +458,8 @@ def api_analyze_board(
         "best_col": best_col,
         "verdict": verdict,
         "pv": pv,
+        "existing_winner": None,
+        "winning_cells": None,
     }
 
 
@@ -519,6 +626,85 @@ def api_about_details():
 # -------------------------
 # API - BGA import
 # -------------------------
+@app.get("/health")
+def health():
+    return {"ok": True}
+
+
+@app.post("/import-bga-auto")
+def import_bga_auto(payload: dict = Body(...)):
+    moves = payload.get("moves") or []
+    starts_with = (payload.get("starts_with") or "rouge").lower()
+
+    if not moves:
+        return {"imported": False, "reason": "moves vides"}
+
+    try:
+        seq = [int(c) - 1 for c in moves]
+    except Exception:
+        return {"imported": False, "reason": "moves invalides"}
+
+    if any(c < 0 or c >= COLONNES for c in seq):
+        return {"imported": False, "reason": "colonnes hors limites"}
+
+    plateau = creer_plateau()
+    coups = []
+    winner = None
+    win_pos = None
+
+    joueur = ROUGE if starts_with == "rouge" else JAUNE
+
+    with get_conn() as conn:
+        pid = db_creer_partie(
+            conn,
+            nom=f"BGA_AUTO_{int(time.time())}",
+            nb_lignes=LIGNES,
+            nb_colonnes=COLONNES,
+            confiance=1
+        )
+
+        for i, col in enumerate(seq):
+            if not coup_valide(plateau, col):
+                break
+
+            jouer_coup(plateau, col, joueur)
+            coups.append(col)
+            db_ajouter_coup(conn, pid, i + 1, joueur, col)
+
+            wp = verifier_victoire(plateau, joueur)
+            if wp:
+                winner = joueur
+                win_pos = wp
+                break
+
+            if plateau_plein(plateau):
+                break
+
+            joueur = changer_joueur(joueur)
+
+        seq_str = ",".join(str(c) for c in coups)
+
+        safe_query(
+            conn,
+            """
+            UPDATE parties
+            SET statut='TERMINE',
+                gagnant=%s,
+                sequence=%s
+            WHERE id_partie=%s;
+            """,
+            (winner, seq_str, pid),
+        )
+
+    return {
+        "imported": True,
+        "id_partie": pid,
+        "winner": winner,
+        "moves": len(coups),
+        "win_pos": win_pos
+    }
+
+
 @app.post("/api/bga/import")
 def api_bga_import(table_id: int = Query(..., ge=1)):
     try:
@@ -551,17 +737,20 @@ def api_bga_import(table_id: int = Query(..., ge=1)):
             for i, col in enumerate(seq):
                 if not coup_valide(plateau, col):
                     break
+
                 jouer_coup(plateau, col, joueur)
                 coups.append(col)
-                db_ajouter_coup(conn, pid, i, joueur, col)
+                db_ajouter_coup(conn, pid, i + 1, joueur, col)
 
                 wp = verifier_victoire(plateau, joueur)
                 if wp:
                     winner = joueur
                     win_pos = wp
                     break
+
                 if plateau_plein(plateau):
                     break
+
                 joueur = changer_joueur(joueur)
 
             seq_str = ",".join(str(c) for c in coups)
@@ -635,6 +824,7 @@ async def new_game(
         "plateau": plateau,
         "sequence": ",".join(str(c) for c in games[game_id]["coups"]),
         "auto": auto,
+        "mode_summary": _build_mode_summary(games[game_id]),
     }
 
 
@@ -648,11 +838,14 @@ async def move(game_id: str, col: int = Query(..., ge=0, le=50)):
 
     async with get_lock(game_id):
         internal = game["internal"]
+        plateau = game["plateau"]
+        joueur = game["joueur"]
+
         if internal["kind"] == "iaia":
             return {"ok": False, "error": "Mode IA/IA : utilise le bouton Lancer"}
 
-        plateau = game["plateau"]
-        joueur = game["joueur"]
+        if internal["kind"] == "vsai" and joueur == internal["ai"]:
+            return {"ok": False, "error": "C'est à l'IA de jouer"}
 
         if not coup_valide(plateau, col):
             return {"ok": False, "error": "Coup invalide"}
@@ -670,12 +863,9 @@ async def move(game_id: str, col: int = Query(..., ge=0, le=50)):
             _finish_db_game(game, joueur, draw=False)
             return {
                 "ok": True,
-                "plateau": plateau,
-                "sequence": ",".join(str(c) for c in game["coups"]),
-                "winner": joueur,
+                **_serialize_game(game),
                 "draw": False,
-                "win_pos": wp,
-                "last_move": game["last_move"],
+                "mode_summary": _build_mode_summary(game),
             }
 
         if plateau_plein(plateau):
@@ -683,71 +873,179 @@ async def move(game_id: str, col: int = Query(..., ge=0, le=50)):
             _finish_db_game(game, None, draw=True)
             return {
                 "ok": True,
-                "plateau": plateau,
-                "sequence": ",".join(str(c) for c in game["coups"]),
-                "winner": None,
+                **_serialize_game(game),
                 "draw": True,
-                "win_pos": None,
-                "last_move": game["last_move"],
+                "mode_summary": _build_mode_summary(game),
             }
 
         game["joueur"] = changer_joueur(joueur)
 
-        ia_move = None
-        if internal["kind"] == "vsai" and game["joueur"] == internal["ai"]:
-            await asyncio.sleep(game["delay_ms"] / 1000.0)
-            col_ia = _ai_choose(internal["ai_type"], plateau, internal["ai"], game["depth"])
-            if col_ia is not None and coup_valide(plateau, col_ia):
-                row2 = jouer_coup(plateau, col_ia, internal["ai"])
-                game["coups"].append(col_ia)
-                game["last_move"] = {"row": row2, "col": col_ia, "player": internal["ai"]}
-                _db_add_move(game, internal["ai"], col_ia)
-                ia_move = col_ia
+        return {
+            "ok": True,
+            **_serialize_game(game),
+            "draw": False,
+            "mode_summary": _build_mode_summary(game),
+        }
 
-                wp2 = verifier_victoire(plateau, internal["ai"])
-                if wp2:
-                    game["finished"] = True
-                    game["winner"] = internal["ai"]
-                    game["win_pos"] = wp2
-                    _finish_db_game(game, internal["ai"], draw=False)
-                    return {
-                        "ok": True,
-                        "plateau": plateau,
-                        "sequence": ",".join(str(c) for c in game["coups"]),
-                        "winner": internal["ai"],
-                        "draw": False,
-                        "win_pos": wp2,
-                        "ia_move": ia_move,
-                        "last_move": game["last_move"],
-                    }
 
-                if plateau_plein(plateau):
-                    game["finished"] = True
-                    _finish_db_game(game, None, draw=True)
-                    return {
-                        "ok": True,
-                        "plateau": plateau,
-                        "sequence": ",".join(str(c) for c in game["coups"]),
-                        "winner": None,
-                        "draw": True,
-                        "win_pos": None,
-                        "ia_move": ia_move,
-                        "last_move": game["last_move"],
-                    }
+@app.post("/ai-move/{game_id}")
+async def ai_move(game_id: str):
+    game = games.get(game_id)
+    if not game:
+        return {"ok": False, "error": "Game not found"}
+    if game["finished"]:
+        return {"ok": False, "error": "Partie terminée"}
 
-                game["joueur"] = changer_joueur(internal["ai"])
+    async with get_lock(game_id):
+        internal = game["internal"]
+        if internal["kind"] != "vsai":
+            return {"ok": False, "error": "Pas en mode Humain vs IA"}
+
+        if game["joueur"] != internal["ai"]:
+            return {"ok": False, "error": "Ce n'est pas le tour de l'IA"}
+
+        await asyncio.sleep(game["delay_ms"] / 1000.0)
+
+        plateau = game["plateau"]
+        col_ia = _ai_choose(internal["ai_type"], plateau, internal["ai"], game["depth"])
+        if col_ia is None or not coup_valide(plateau, col_ia):
+            return {"ok": False, "error": "IA ne trouve pas de coup"}
+
+        row = jouer_coup(plateau, col_ia, internal["ai"])
+        game["coups"].append(col_ia)
+        game["last_move"] = {"row": row, "col": col_ia, "player": internal["ai"]}
+        _db_add_move(game, internal["ai"], col_ia)
+
+        wp = verifier_victoire(plateau, internal["ai"])
+        if wp:
+            game["finished"] = True
+            game["winner"] = internal["ai"]
+            game["win_pos"] = wp
+            _finish_db_game(game, internal["ai"], draw=False)
+            return {
+                "ok": True,
+                **_serialize_game(game),
+                "draw": False,
+                "mode_summary": _build_mode_summary(game),
+            }
+
+        if plateau_plein(plateau):
+            game["finished"] = True
+            _finish_db_game(game, None, draw=True)
+            return {
+                "ok": True,
+                **_serialize_game(game),
+                "draw": True,
+                "mode_summary": _build_mode_summary(game),
+            }
+
+        game["joueur"] = changer_joueur(internal["ai"])
+        return {
+            "ok": True,
+            **_serialize_game(game),
+            "draw": False,
+            "mode_summary": _build_mode_summary(game),
+        }
+
+
+@app.post("/switch-mode/{game_id}")
+async def switch_mode(
+    game_id: str,
+    mode: ModeUI = Query(...),
+    human_color: Literal["R", "J"] = "R",
+    ai_type: AIType = "minimax",
+    ai_r: AIType = "minimax",
+    ai_j: AIType = "bga",
+    depth: int = Query(4, ge=1, le=9),
+    delay_ms: int = Query(350, ge=0, le=2000),
+):
+    game = games.get(game_id)
+    if not game:
+        return {"ok": False, "error": "Game not found"}
+    if game["finished"]:
+        return {"ok": False, "error": "Partie terminée"}
+
+    async with get_lock(game_id):
+        if mode == "pvp":
+            internal = {"kind": "pvp"}
+        elif mode == "vsai":
+            internal = {"kind": "vsai", "human": human_color, "ai": changer_joueur(human_color), "ai_type": ai_type}
+        else:
+            internal = {"kind": "iaia", "ai_for": {"R": ai_r, "J": ai_j}}
+
+        game["internal"] = internal
+        game["depth"] = int(depth)
+        game["delay_ms"] = int(delay_ms)
 
         return {
             "ok": True,
-            "plateau": plateau,
-            "sequence": ",".join(str(c) for c in game["coups"]),
-            "winner": None,
-            "draw": False,
-            "win_pos": None,
-            "next_player": game["joueur"],
-            "ia_move": ia_move,
-            "last_move": game["last_move"],
+            **_serialize_game(game),
+            "mode_summary": _build_mode_summary(game),
         }
+
+
+@app.post("/start-from-board")
+async def start_from_board(
+    board: List[List[str]] = Body(...),
+    mode: ModeUI = Query("pvp"),
+    next_player: Literal["R", "J"] = "R",
+    human_color: Literal["R", "J"] = "R",
+    ai_type: AIType = "minimax",
+    ai_r: AIType = "minimax",
+    ai_j: AIType = "bga",
+    depth: int = Query(4, ge=1, le=9),
+    delay_ms: int = Query(350, ge=0, le=2000),
+):
+    if not isinstance(board, list) or len(board) != LIGNES:
+        return {"ok": False, "error": "Board invalide (lignes)"}
+    for r in range(LIGNES):
+        if not isinstance(board[r], list) or len(board[r]) != COLONNES:
+            return {"ok": False, "error": "Board invalide (colonnes)"}
+        for c in range(COLONNES):
+            if board[r][c] not in (".", "R", "J"):
+                return {"ok": False, "error": "Board invalide (valeurs)"}
+
+    existing_winner, _existing_win_pos = _current_existing_winner(board)
+    if existing_winner:
+        return {"ok": False, "error": "Impossible de reprendre : cette position est déjà gagnante."}
+
+    r_count, j_count = _count_pieces(board)
+    if r_count < j_count or r_count > j_count + 1:
+        return {"ok": False, "error": "Position incohérente : nombre de pions invalide."}
+
+    expected_next = ROUGE if r_count == j_count else JAUNE
+    if next_player != expected_next:
+        return {"ok": False, "error": f"Joueur suivant incohérent. Attendu : {expected_next}"}
+
+    game_id = uuid4().hex
+    if mode == "pvp":
+        internal = {"kind": "pvp"}
+    elif mode == "vsai":
+        internal = {"kind": "vsai", "human": human_color, "ai": changer_joueur(human_color), "ai_type": ai_type}
+    else:
+        internal = {"kind": "iaia", "ai_for": {"R": ai_r, "J": ai_j}}
+
+    games[game_id] = {
+        "plateau": _deepcopy_plateau(board),
+        "joueur": next_player,
+        "finished": False,
+        "winner": None,
+        "win_pos": None,
+        "coups": [],
+        "id_partie": None,
+        "depth": int(depth),
+        "delay_ms": int(delay_ms),
+        "internal": internal,
+        "last_move": None,
+    }
+
+    return {
+        "ok": True,
+        "game_id": game_id,
+        "plateau": games[game_id]["plateau"],
+        "sequence": "",
+        "mode_summary": _build_mode_summary(games[game_id]),
+    }
 
 
 @app.post("/step/{game_id}")
@@ -784,14 +1082,9 @@ async def step(game_id: str):
             _finish_db_game(game, joueur, draw=False)
             return {
                 "ok": True,
-                "plateau": plateau,
-                "sequence": ",".join(str(c) for c in game["coups"]),
-                "winner": joueur,
+                **_serialize_game(game),
                 "draw": False,
-                "win_pos": wp,
-                "ai_move": col,
-                "next_player": None,
-                "last_move": game["last_move"],
+                "mode_summary": _build_mode_summary(game),
             }
 
         if plateau_plein(plateau):
@@ -799,25 +1092,15 @@ async def step(game_id: str):
             _finish_db_game(game, None, draw=True)
             return {
                 "ok": True,
-                "plateau": plateau,
-                "sequence": ",".join(str(c) for c in game["coups"]),
-                "winner": None,
+                **_serialize_game(game),
                 "draw": True,
-                "win_pos": None,
-                "ai_move": col,
-                "next_player": None,
-                "last_move": game["last_move"],
+                "mode_summary": _build_mode_summary(game),
             }
 
         game["joueur"] = changer_joueur(joueur)
         return {
             "ok": True,
-            "plateau": plateau,
-            "sequence": ",".join(str(c) for c in game["coups"]),
-            "winner": None,
+            **_serialize_game(game),
             "draw": False,
-            "win_pos": None,
-            "ai_move": col,
-            "next_player": game["joueur"],
-            "last_move": game["last_move"],
+            "mode_summary": _build_mode_summary(game),
         }

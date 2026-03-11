@@ -4,8 +4,9 @@ let winPos = null;
 let lastMove = null;
 let busy = false;
 
-let currentUIMode = "pvp"; // pvp|vsai|iaia
+let currentUIMode = "pvp";
 let editorEnabled = false;
+let iaiaRunning = false;
 
 const gridEl = document.getElementById("grid");
 const boardTopEl = document.getElementById("boardTop");
@@ -14,6 +15,8 @@ const statusEl = document.getElementById("status");
 const seqEl = document.getElementById("seq");
 const globalStatsEl = document.getElementById("globalStats");
 const optionsEl = document.getElementById("options");
+const modeSummaryEl = document.getElementById("modeSummary");
+const boardHintEl = document.getElementById("boardHint");
 
 const verdictEl = document.getElementById("verdict");
 const bestMoveEl = document.getElementById("bestMove");
@@ -28,6 +31,9 @@ const analyzeSeqBtn = document.getElementById("analyzeSeqBtn");
 const toggleEditorBtn = document.getElementById("toggleEditorBtn");
 const analyzeBoardBtn = document.getElementById("analyzeBoardBtn");
 const clearBoardBtn = document.getElementById("clearBoardBtn");
+const resumeBoardBtn = document.getElementById("resumeBoardBtn");
+const resumeNextPlayerEl = document.getElementById("resumeNextPlayer");
+const resumeModeEl = document.getElementById("resumeMode");
 
 let lastAnalysis = null;
 
@@ -60,6 +66,27 @@ function setAnalysisUIEmpty(){
   pvLineEl.textContent = "";
   lastAnalysis = null;
   applyAnalysisToUI();
+}
+
+function updateModeSummary(data = null){
+  if (data?.mode_summary){
+    const m = data.mode_summary;
+    modeSummaryEl.textContent = `Mode actuel : ${m.mode} — ${m.detail} — Tour : ${m.turn}`;
+    return;
+  }
+
+  if (currentUIMode === "pvp"){
+    modeSummaryEl.textContent = "Mode actuel : Humain vs Humain";
+  } else if (currentUIMode === "vsai"){
+    const humanColor = document.getElementById("humanColor")?.value || "R";
+    const aiType = document.getElementById("aiType")?.value || "minimax";
+    const aiColor = humanColor === "R" ? "J" : "R";
+    modeSummaryEl.textContent = `Mode actuel : Humain vs IA — Humain : ${humanColor} — IA : ${aiColor} (${aiType})`;
+  } else {
+    const aiR = document.getElementById("aiR")?.value || "minimax";
+    const aiJ = document.getElementById("aiJ")?.value || "bga";
+    modeSummaryEl.textContent = `Mode actuel : IA vs IA — Rouge : ${aiR} — Jaune : ${aiJ}`;
+  }
 }
 
 function normalizeScore(v){
@@ -103,7 +130,9 @@ function applyAnalysisToUI(){
   verdictEl.textContent = lastAnalysis.verdict || "—";
   bestMoveEl.textContent = (bestCol === null || bestCol === undefined) ? "—" : String(bestCol);
 
-  if (lastAnalysis.pv && lastAnalysis.pv.length){
+  if (lastAnalysis.existing_winner){
+    pvLineEl.textContent = `Victoire déjà présente pour ${lastAnalysis.existing_winner}`;
+  } else if (lastAnalysis.pv && lastAnalysis.pv.length){
     pvLineEl.textContent = `Ligne proposée : ${lastAnalysis.pv.join(" → ")}`;
   } else {
     pvLineEl.textContent = "";
@@ -111,7 +140,6 @@ function applyAnalysisToUI(){
 }
 
 async function fetchAnalysis(){
-  // analyse uniquement si partie live
   if (!gameId || !board) return;
 
   const depth = Number(analysisDepthEl?.value || 4);
@@ -125,7 +153,11 @@ async function fetchAnalysis(){
     const res = await fetch(`/api/analyze/${gameId}?for_player=${encodeURIComponent(forPlayer)}&depth=${encodeURIComponent(depth)}`);
     const data = await res.json();
     if (!data.ok) return;
+
     lastAnalysis = data;
+    if (data.winning_cells){
+      winPos = data.winning_cells;
+    }
     applyAnalysisToUI();
   }catch{}
 }
@@ -196,14 +228,12 @@ function renderBoard(){
 
       cell.addEventListener("click", async () => {
         if (editorEnabled){
-          // editor: cycle value
           board[r][c] = cellCycleValue(board[r][c]);
           lastMove = null;
           winPos = null;
           renderBoard();
           return;
         }
-        // normal play: play column
         await playMove(c);
       });
 
@@ -220,7 +250,7 @@ async function loadStats(){
     const data = await res.json();
     if (!data.ok) throw new Error();
     globalStatsEl.textContent =
-      `Parties: ${data.total} • Rouge: ${data.rouge} • Jaune: ${data.jaune} • Nuls: ${data.nuls} • En cours: ${data.en_cours}`;
+      `Parties : ${data.total} • Rouge : ${data.rouge} • Jaune : ${data.jaune} • Nuls : ${data.nuls} • En cours : ${data.en_cours}`;
   }catch{
     globalStatsEl.textContent = "Stats indisponibles";
   }
@@ -228,68 +258,101 @@ async function loadStats(){
 
 function renderOptions(){
   if (currentUIMode === "pvp"){
-    optionsEl.innerHTML = `<div class="muted">PvP — ROUGE commence.</div>`;
+    optionsEl.innerHTML = `
+      <div class="settingsGrid">
+        <div class="settingCard">
+          <div class="settingTitle">Mode</div>
+          <div class="muted">Deux joueurs humains, Rouge commence.</div>
+        </div>
+      </div>
+    `;
+    updateModeSummary();
     return;
   }
 
   if (currentUIMode === "vsai"){
     optionsEl.innerHTML = `
-      <div class="row mt">
-        <label class="muted">Tu joues
-          <select id="humanColor" class="sel">
-            <option value="R" selected>Rouge</option>
-            <option value="J">Jaune</option>
-          </select>
-        </label>
-        <label class="muted">IA
-          <select id="aiType" class="sel">
+      <div class="settingsGrid">
+        <div class="settingCard">
+          <label class="muted">Tu joues
+            <select id="humanColor" class="sel">
+              <option value="R" selected>Rouge</option>
+              <option value="J">Jaune</option>
+            </select>
+          </label>
+        </div>
+        <div class="settingCard">
+          <label class="muted">Type d’IA
+            <select id="aiType" class="sel">
+              <option value="random">Aléatoire</option>
+              <option value="minimax" selected>Minimax</option>
+              <option value="bga">BGA</option>
+            </select>
+          </label>
+        </div>
+        <div class="settingCard">
+          <label class="muted">Profondeur
+            <input id="depth" class="sel" type="number" min="1" max="9" value="4" />
+          </label>
+        </div>
+        <div class="settingCard">
+          <label class="muted">Délai IA (ms)
+            <input id="delay" class="sel" type="number" min="0" max="2000" value="500" />
+          </label>
+        </div>
+      </div>
+    `;
+    optionsEl.querySelectorAll("select,input").forEach(el => {
+      el.addEventListener("change", () => updateModeSummary());
+    });
+    updateModeSummary();
+    return;
+  }
+
+  optionsEl.innerHTML = `
+    <div class="settingsGrid">
+      <div class="settingCard">
+        <label class="muted">IA Rouge
+          <select id="aiR" class="sel">
             <option value="random">Aléatoire</option>
             <option value="minimax" selected>Minimax</option>
             <option value="bga">BGA</option>
           </select>
         </label>
+      </div>
+      <div class="settingCard">
+        <label class="muted">IA Jaune
+          <select id="aiJ" class="sel">
+            <option value="random">Aléatoire</option>
+            <option value="minimax">Minimax</option>
+            <option value="bga" selected>BGA</option>
+          </select>
+        </label>
+      </div>
+      <div class="settingCard">
         <label class="muted">Profondeur
           <input id="depth" class="sel" type="number" min="1" max="9" value="4" />
         </label>
-        <label class="muted">Délai IA (ms)
+      </div>
+      <div class="settingCard">
+        <label class="muted">Délai (ms)
           <input id="delay" class="sel" type="number" min="0" max="2000" value="350" />
         </label>
       </div>
-    `;
-    return;
-  }
-
-  optionsEl.innerHTML = `
-    <div class="row mt">
-      <label class="muted">IA Rouge
-        <select id="aiR" class="sel">
-          <option value="random">Aléatoire</option>
-          <option value="minimax" selected>Minimax</option>
-          <option value="bga">BGA</option>
-        </select>
-      </label>
-      <label class="muted">IA Jaune
-        <select id="aiJ" class="sel">
-          <option value="random">Aléatoire</option>
-          <option value="minimax">Minimax</option>
-          <option value="bga" selected>BGA</option>
-        </select>
-      </label>
-      <label class="muted">Profondeur
-        <input id="depth" class="sel" type="number" min="1" max="9" value="4" />
-      </label>
-      <label class="muted">Délai (ms)
-        <input id="delay" class="sel" type="number" min="0" max="2000" value="250" />
-      </label>
-      <button id="runBtn" class="btn">▶ Lancer IA/IA</button>
-      <button id="stopBtn" class="btn secondary">⏹ Stop</button>
+      <div class="settingCard settingActions">
+        <button id="runBtn" class="btn">▶ Lancer IA/IA</button>
+        <button id="stopBtn" class="btn secondary">⏹ Stop</button>
+      </div>
     </div>
   `;
+
   document.getElementById("runBtn").addEventListener("click", runIAIA);
   document.getElementById("stopBtn").addEventListener("click", () => { iaiaRunning = false; });
+  optionsEl.querySelectorAll("select,input").forEach(el => {
+    el.addEventListener("change", () => updateModeSummary());
+  });
+  updateModeSummary();
 }
-
-let iaiaRunning = false;
 
 async function newGame(){
   if (busy) return;
@@ -313,27 +376,29 @@ async function newGame(){
       const humanColor = document.getElementById("humanColor")?.value || "R";
       const aiType = document.getElementById("aiType")?.value || "minimax";
       const depth = document.getElementById("depth")?.value || "4";
-      const delay = document.getElementById("delay")?.value || "350";
+      const delay = document.getElementById("delay")?.value || "500";
       url += `mode=vsai&human_color=${encodeURIComponent(humanColor)}&ai_type=${encodeURIComponent(aiType)}&depth=${encodeURIComponent(depth)}&delay_ms=${encodeURIComponent(delay)}`;
     } else {
       const aiR = document.getElementById("aiR")?.value || "minimax";
       const aiJ = document.getElementById("aiJ")?.value || "bga";
       const depth = document.getElementById("depth")?.value || "4";
-      const delay = document.getElementById("delay")?.value || "250";
+      const delay = document.getElementById("delay")?.value || "350";
       url += `mode=iaia&ai_r=${encodeURIComponent(aiR)}&ai_j=${encodeURIComponent(aiJ)}&depth=${encodeURIComponent(depth)}&delay_ms=${encodeURIComponent(delay)}`;
     }
 
     const res = await fetch(url, { method: "POST" });
     const data = await res.json();
     if (!data.ok){
-      statusEl.textContent = data.error || "Erreur new-game";
+      statusEl.textContent = data.error || "Erreur nouvelle partie";
       return;
     }
 
     gameId = data.game_id;
     board = data.plateau;
     setSequence(data.sequence || "");
-    statusEl.textContent = "Partie prête — joue une colonne";
+    updateModeSummary(data);
+    boardHintEl.textContent = "Le mode est actif, tu peux jouer.";
+    statusEl.textContent = "Partie prête.";
 
     if (data.auto?.ia_move !== undefined){
       statusEl.textContent = `L’IA commence (col ${data.auto.ia_move}) — à toi`;
@@ -344,6 +409,51 @@ async function newGame(){
     await fetchAnalysis();
   } finally {
     setBusy(false);
+  }
+}
+
+async function maybeRunAIAfterHuman(){
+  if (!gameId || currentUIMode !== "vsai") return;
+
+  const humanColor = document.getElementById("humanColor")?.value || "R";
+  const aiColor = humanColor === "R" ? "J" : "R";
+
+  if (statusEl.textContent.includes(`À ${aiColor} de jouer`) || statusEl.textContent.includes("L’IA réfléchit")){
+    statusEl.textContent = "L’IA réfléchit...";
+    setBusy(true);
+    try{
+      const res = await fetch(`/ai-move/${gameId}`, { method: "POST" });
+      const data = await res.json();
+
+      if (!data.ok){
+        statusEl.textContent = data.error || "Erreur IA";
+        return;
+      }
+
+      board = data.plateau;
+      winPos = data.win_pos || null;
+      lastMove = data.last_move || null;
+      setSequence(data.sequence || "");
+      updateModeSummary(data);
+
+      renderBoard();
+      await fetchAnalysis();
+
+      if (data.winner){
+        statusEl.textContent = `🎉 Victoire ${data.winner}`;
+        await loadStats();
+        return;
+      }
+      if (data.draw){
+        statusEl.textContent = "🤝 Match nul";
+        await loadStats();
+        return;
+      }
+
+      statusEl.textContent = "À toi de jouer";
+    } finally {
+      setBusy(false);
+    }
   }
 }
 
@@ -358,15 +468,16 @@ async function playMove(col){
     const data = await res.json();
 
     if (!data.ok){
-      statusEl.textContent = data.error || "Erreur move";
+      statusEl.textContent = data.error || "Erreur coup";
       return;
     }
 
     board = data.plateau;
     winPos = data.win_pos || null;
     lastMove = data.last_move || null;
-
     setSequence(data.sequence || "");
+    updateModeSummary(data);
+
     renderBoard();
     await fetchAnalysis();
 
@@ -381,9 +492,7 @@ async function playMove(col){
       return;
     }
 
-    if (data.ia_move !== undefined && data.ia_move !== null){
-      statusEl.textContent = `IA a joué col ${data.ia_move} — à toi`;
-    } else if (data.next_player){
+    if (data.next_player){
       statusEl.textContent = `À ${data.next_player} de jouer`;
     } else {
       statusEl.textContent = "—";
@@ -391,6 +500,8 @@ async function playMove(col){
   } finally {
     setBusy(false);
   }
+
+  await maybeRunAIAfterHuman();
 }
 
 async function stepIAIA(){
@@ -400,10 +511,12 @@ async function stepIAIA(){
     statusEl.textContent = data.error || "Erreur step";
     return { done: true };
   }
+
   board = data.plateau;
   winPos = data.win_pos || null;
   lastMove = data.last_move || null;
   setSequence(data.sequence || "");
+  updateModeSummary(data);
   renderBoard();
 
   if (data.winner){
@@ -416,7 +529,8 @@ async function stepIAIA(){
     await loadStats();
     return { done: true };
   }
-  statusEl.textContent = `IA/IA — dernier coup col ${data.ai_move} — à ${data.next_player}`;
+
+  statusEl.textContent = `IA/IA — dernier coup col ${data.last_move?.col ?? "?"} — à ${data.next_player}`;
   return { done: false };
 }
 
@@ -426,28 +540,74 @@ async function runIAIA(){
   statusEl.textContent = "IA/IA en cours...";
   while (iaiaRunning){
     const { done } = await stepIAIA();
-    if (done) { iaiaRunning = false; break; }
+    if (done) {
+      iaiaRunning = false;
+      break;
+    }
     await new Promise(r => setTimeout(r, 0));
   }
 }
 
-function setMode(mode){
+async function switchModeKeepBoard(mode){
   currentUIMode = mode;
   document.querySelectorAll("button.modeBtn").forEach(b => {
     b.classList.toggle("active", b.dataset.mode === mode);
   });
-  gameId = null;
-  board = null;
-  winPos = null;
-  lastMove = null;
-  editorEnabled = false;
-  toggleEditorBtn.textContent = "Activer l’éditeur";
-  setSequence("");
-  setAnalysisUIEmpty();
-  statusEl.textContent = "Clique sur “Nouvelle partie”.";
+
   renderOptions();
-  renderTopButtons();
-  gridEl.innerHTML = "";
+
+  if (!gameId || !board || editorEnabled){
+    updateModeSummary();
+    return;
+  }
+
+  let url = `/switch-mode/${gameId}?`;
+  if (mode === "pvp"){
+    url += `mode=pvp&depth=4&delay_ms=350`;
+  } else if (mode === "vsai"){
+    const humanColor = document.getElementById("humanColor")?.value || "R";
+    const aiType = document.getElementById("aiType")?.value || "minimax";
+    const depth = document.getElementById("depth")?.value || "4";
+    const delay = document.getElementById("delay")?.value || "500";
+    url += `mode=vsai&human_color=${encodeURIComponent(humanColor)}&ai_type=${encodeURIComponent(aiType)}&depth=${encodeURIComponent(depth)}&delay_ms=${encodeURIComponent(delay)}`;
+  } else {
+    const aiR = document.getElementById("aiR")?.value || "minimax";
+    const aiJ = document.getElementById("aiJ")?.value || "bga";
+    const depth = document.getElementById("depth")?.value || "4";
+    const delay = document.getElementById("delay")?.value || "350";
+    url += `mode=iaia&ai_r=${encodeURIComponent(aiR)}&ai_j=${encodeURIComponent(aiJ)}&depth=${encodeURIComponent(depth)}&delay_ms=${encodeURIComponent(delay)}`;
+  }
+
+  setBusy(true);
+  try{
+    const res = await fetch(url, { method: "POST" });
+    const data = await res.json();
+
+    if (!data.ok){
+      statusEl.textContent = data.error || "Erreur changement de mode";
+      return;
+    }
+
+    board = data.plateau;
+    winPos = data.win_pos || null;
+    lastMove = data.last_move || null;
+    setSequence(data.sequence || "");
+    updateModeSummary(data);
+    renderBoard();
+    await fetchAnalysis();
+
+    statusEl.textContent = `Mode changé : ${mode === "pvp" ? "Humain vs Humain" : mode === "vsai" ? "Humain vs IA" : "IA vs IA"} (plateau conservé)`;
+
+    if (mode === "vsai"){
+      const humanColor = document.getElementById("humanColor")?.value || "R";
+      const aiColor = humanColor === "R" ? "J" : "R";
+      if (data.next_player === aiColor){
+        await maybeRunAIAfterHuman();
+      }
+    }
+  } finally {
+    setBusy(false);
+  }
 }
 
 async function analyzeSequence(){
@@ -463,18 +623,19 @@ async function analyzeSequence(){
       return;
     }
 
-    // affiche la position analysée
     gameId = null;
     editorEnabled = false;
     toggleEditorBtn.textContent = "Activer l’éditeur";
 
     board = data.plateau;
-    winPos = null;
+    winPos = data.winning_cells || null;
     lastMove = null;
     lastAnalysis = data;
 
     setSequence(data.sequence_applied || "");
-    statusEl.textContent = `Analyse OK — Verdict: ${data.verdict} — Meilleur coup: ${data.best_col}`;
+    updateModeSummary();
+    statusEl.textContent = `Analyse OK — Verdict : ${data.verdict}${data.best_col !== null && data.best_col !== undefined ? ` — Meilleur coup : ${data.best_col}` : ""}`;
+    boardHintEl.textContent = "Position chargée depuis une séquence.";
     renderBoard();
   }catch{
     statusEl.textContent = "Erreur réseau";
@@ -501,20 +662,30 @@ async function analyzeBoard(){
       statusEl.textContent = data.error || "Erreur analyse plateau";
       return;
     }
+
     lastAnalysis = data;
-    statusEl.textContent = `Analyse plateau — Verdict: ${data.verdict} — Meilleur coup: ${data.best_col}`;
-    renderTopButtons();
+    winPos = data.winning_cells || null;
+    statusEl.textContent = `Analyse plateau — Verdict : ${data.verdict}${data.best_col !== null && data.best_col !== undefined ? ` — Meilleur coup : ${data.best_col}` : ""}`;
+    boardHintEl.textContent = "Plateau édité analysé.";
+    renderBoard();
   }catch{
     statusEl.textContent = "Erreur réseau";
   }
 }
 
 function toggleEditor(){
+  if (!board){
+    board = emptyBoard(9, 9);
+  }
+
   editorEnabled = !editorEnabled;
   toggleEditorBtn.textContent = editorEnabled ? "Désactiver l’éditeur" : "Activer l’éditeur";
   statusEl.textContent = editorEnabled
-    ? "Éditeur actif : clique les cases (R → J → vide), puis “Analyser le plateau”."
+    ? "Éditeur actif : clique les cases (R → J → vide), puis analyse ou reprends la position."
     : "Éditeur désactivé.";
+  boardHintEl.textContent = editorEnabled
+    ? "Mode édition du plateau."
+    : "Mode jeu normal.";
   renderTopButtons();
 }
 
@@ -525,11 +696,78 @@ function clearBoard(){
   lastMove = null;
   setSequence("");
   setAnalysisUIEmpty();
+  boardHintEl.textContent = "Plateau vidé.";
   renderBoard();
 }
 
+async function resumeBoard(){
+  if (!board) return;
+
+  const mode = resumeModeEl.value || "pvp";
+  const nextPlayer = resumeNextPlayerEl.value || "R";
+
+  let url = `/start-from-board?mode=${encodeURIComponent(mode)}&next_player=${encodeURIComponent(nextPlayer)}`;
+
+  if (mode === "pvp"){
+    url += `&depth=4&delay_ms=350`;
+  } else if (mode === "vsai"){
+    const humanColor = document.getElementById("humanColor")?.value || "R";
+    const aiType = document.getElementById("aiType")?.value || "minimax";
+    const depth = document.getElementById("depth")?.value || "4";
+    const delay = document.getElementById("delay")?.value || "500";
+    url += `&human_color=${encodeURIComponent(humanColor)}&ai_type=${encodeURIComponent(aiType)}&depth=${encodeURIComponent(depth)}&delay_ms=${encodeURIComponent(delay)}`;
+  } else if (mode === "iaia"){
+    const aiR = document.getElementById("aiR")?.value || "minimax";
+    const aiJ = document.getElementById("aiJ")?.value || "bga";
+    const depth = document.getElementById("depth")?.value || "4";
+    const delay = document.getElementById("delay")?.value || "350";
+    url += `&ai_r=${encodeURIComponent(aiR)}&ai_j=${encodeURIComponent(aiJ)}&depth=${encodeURIComponent(depth)}&delay_ms=${encodeURIComponent(delay)}`;
+  }
+
+  setBusy(true);
+  try{
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(board),
+    });
+    const data = await res.json();
+
+    if (!data.ok){
+      statusEl.textContent = data.error || "Impossible de reprendre cette position";
+      return;
+    }
+
+    currentUIMode = mode;
+    document.querySelectorAll("button.modeBtn").forEach(b => {
+      b.classList.toggle("active", b.dataset.mode === mode);
+    });
+    renderOptions();
+
+    gameId = data.game_id;
+    board = data.plateau;
+    editorEnabled = false;
+    toggleEditorBtn.textContent = "Activer l’éditeur";
+    updateModeSummary(data);
+    boardHintEl.textContent = "Partie reprise depuis l’éditeur.";
+    statusEl.textContent = "Position reprise avec succès.";
+    renderBoard();
+    await fetchAnalysis();
+
+    if (mode === "vsai"){
+      const humanColor = document.getElementById("humanColor")?.value || "R";
+      const aiColor = humanColor === "R" ? "J" : "R";
+      if (data.mode_summary?.turn === aiColor){
+        await maybeRunAIAfterHuman();
+      }
+    }
+  } finally {
+    setBusy(false);
+  }
+}
+
 document.querySelectorAll("button.modeBtn").forEach(b => {
-  b.addEventListener("click", () => setMode(b.dataset.mode));
+  b.addEventListener("click", () => switchModeKeepBoard(b.dataset.mode));
 });
 
 newGameBtn.addEventListener("click", newGame);
@@ -538,10 +776,11 @@ analyzeSeqBtn.addEventListener("click", analyzeSequence);
 toggleEditorBtn.addEventListener("click", toggleEditor);
 analyzeBoardBtn.addEventListener("click", analyzeBoard);
 clearBoardBtn.addEventListener("click", clearBoard);
+resumeBoardBtn.addEventListener("click", resumeBoard);
 
 analysisDepthEl.addEventListener("change", () => { if (gameId) fetchAnalysis(); });
 assistHumanEl.addEventListener("change", () => { if (gameId) fetchAnalysis(); });
 
-// init
 renderOptions();
+updateModeSummary();
 loadStats();

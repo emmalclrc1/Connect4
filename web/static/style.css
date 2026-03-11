@@ -243,3 +243,152 @@ h3{ font-size:16px; }
   outline: 2px solid rgba(79,124,255,.85);
   outline-offset: 2px;
 }
+
+.appLayout{
+  display:grid;
+  grid-template-columns: 420px 1fr;
+  gap:18px;
+  align-items:start;
+}
+
+@media (max-width: 1100px){
+  .appLayout{
+    grid-template-columns:1fr;
+  }
+}
+
+.sidePanel{
+  min-width:0;
+}
+
+.mainBoardZone{
+  min-width:0;
+}
+
+.boardCard{
+  min-height:100%;
+}
+
+.boardHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.sectionTitle{
+  font-size:18px;
+  font-weight:700;
+}
+
+.modeChooser{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+
+.modeBtn{
+  text-align:left;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.05);
+  color:var(--text);
+  cursor:pointer;
+  font-weight:700;
+}
+
+.modeBtn.active{
+  background:rgba(79,124,255,.22);
+  border-color:rgba(79,124,255,.45);
+}
+
+.settingsGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+@media (max-width: 520px){
+  .settingsGrid{
+    grid-template-columns:1fr;
+  }
+}
+
+.settingCard{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  padding:10px;
+}
+
+.settingTitle{
+  font-weight:700;
+  margin-bottom:6px;
+}
+
+.settingActions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.inlineCheck{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.pills{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.06);
+}
+
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:var(--accent);
+}
+
+.weightBarWrap{
+  height:30px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(0,0,0,.12);
+  overflow:hidden;
+  position:relative;
+}
+
+.weightBar{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:0%;
+  background:rgba(79,124,255,.35);
+}
+
+.weightBar.neg{
+  top:0;
+  bottom:auto;
+  background:rgba(239,68,68,.35);
+}
+
+.colWrap.best .dropBtn{
+  outline:2px solid rgba(79,124,255,.85);
+  outline-offset:2px;
+}

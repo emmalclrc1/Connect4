@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Connect4 — Jouer</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="/static/style.css?v=20260304">
+  <link rel="stylesheet" href="/static/style.css?v=20260312">
 </head>
 <body>
 <header class="topbar">
@@ -19,77 +19,127 @@
   </nav>
 </header>
 
-<main class="page grid2">
-  <section class="card">
-    <div class="row">
-      <div>
-        <h1>Jouer</h1>
-        <div class="muted">Choisis un mode, puis clique sur “Nouvelle partie”.</div>
+<main class="page appLayout">
+  <aside class="sidePanel">
+    <section class="card">
+      <div class="row">
+        <div>
+          <h1>Jouer</h1>
+          <div class="muted">Interface claire, analyse live, éditeur de plateau et reprise de position.</div>
+        </div>
+        <button id="newGameBtn" class="btn">Nouvelle partie</button>
       </div>
-      <button id="newGameBtn" class="btn">Nouvelle partie</button>
-    </div>
 
-    <div class="mt modes">
-      <button class="modeBtn active" data-mode="pvp">HvH</button>
-      <button class="modeBtn" data-mode="vsai">Vs IA</button>
-      <button class="modeBtn" data-mode="iaia">IA/IA</button>
-    </div>
-
-    <div id="options" class="mt"></div>
-
-    <div class="mt pills">
-      <span class="pill"><span class="dot"></span> Séquence: <span id="seq">—</span></span>
-      <span class="pill">Prédiction: <b id="verdict">—</b></span>
-      <span class="pill">Meilleur coup: <b id="bestMove">—</b></span>
-    </div>
-
-    <div class="mt muted" id="pvLine"></div>
-
-    <div class="mt row">
-      <label class="muted">Analyse (profondeur)
-        <input id="analysisDepth" class="sel" type="number" min="1" max="9" value="4" />
-      </label>
-
-      <label class="muted" style="display:flex;align-items:center;gap:8px;">
-        Coaching humain
-        <input id="assistHuman" type="checkbox" checked />
-      </label>
-    </div>
-
-    <div class="mt">
-      <div class="muted">Soutenance : analyser une séquence (ex: 3,3,4,2)</div>
-      <div class="row mt">
-        <input id="seqInput" class="inp" placeholder="Ex: 3,3,4,2" />
-        <select id="seqPlayer" class="sel">
-          <option value="R" selected>Point de vue Rouge</option>
-          <option value="J">Point de vue Jaune</option>
-        </select>
-        <button id="analyzeSeqBtn" class="btn secondary">Analyser</button>
+      <div class="mt modeChooser">
+        <button class="modeBtn active" data-mode="pvp">Humain vs Humain</button>
+        <button class="modeBtn" data-mode="vsai">Humain vs IA</button>
+        <button class="modeBtn" data-mode="iaia">IA vs IA</button>
       </div>
-    </div>
 
-    <div class="mt">
-      <div class="muted">Soutenance : éditeur de plateau (clic case = R → J → vide)</div>
-      <div class="row mt">
-        <button id="toggleEditorBtn" class="btn secondary">Activer l’éditeur</button>
-        <button id="analyzeBoardBtn" class="btn secondary">Analyser le plateau</button>
-        <button id="clearBoardBtn" class="btn secondary">Vider</button>
-      </div>
-    </div>
+      <div id="modeSummary" class="statusLine mt">Mode actuel : Humain vs Humain</div>
 
-    <div class="mt muted" id="globalStats">Stats...</div>
-  </section>
-
-  <section class="boardArea">
-    <div class="boardTop" id="boardTop"></div>
-    <div class="board"><div id="grid"></div></div>
-
-    <section class="card" style="width:min(94vw,600px)">
-      <div id="status" class="statusLine">Clique sur “Nouvelle partie”.</div>
+      <div id="options" class="mt"></div>
     </section>
+
+    <section class="card mt">
+      <h2>Analyse</h2>
+
+      <div class="mt pills">
+        <span class="pill"><span class="dot"></span> Séquence : <span id="seq">—</span></span>
+        <span class="pill">Prédiction : <b id="verdict">—</b></span>
+        <span class="pill">Meilleur coup : <b id="bestMove">—</b></span>
+      </div>
+
+      <div class="mt muted" id="pvLine"></div>
+
+      <div class="mt row">
+        <label class="muted">Profondeur
+          <input id="analysisDepth" class="sel" type="number" min="1" max="9" value="4" />
+        </label>
+
+        <label class="muted inlineCheck">
+          Coaching humain
+          <input id="assistHuman" type="checkbox" checked />
+        </label>
+      </div>
+    </section>
+
+    <section class="card mt">
+      <h2>Analyse rapide d’une position</h2>
+      <div class="muted mt">Tu peux coller une séquence ou éditer un plateau à la main.</div>
+
+      <div class="mt">
+        <div class="muted">Analyser une séquence (ex : 3,3,4,2)</div>
+        <div class="row mt">
+          <input id="seqInput" class="inp" placeholder="Ex: 3,3,4,2" />
+          <select id="seqPlayer" class="sel">
+            <option value="R" selected>Point de vue Rouge</option>
+            <option value="J">Point de vue Jaune</option>
+          </select>
+          <button id="analyzeSeqBtn" class="btn secondary">Analyser</button>
+        </div>
+      </div>
+
+      <div class="mt">
+        <div class="muted">Éditeur de plateau</div>
+        <div class="row mt">
+          <button id="toggleEditorBtn" class="btn secondary">Activer l’éditeur</button>
+          <button id="analyzeBoardBtn" class="btn secondary">Analyser le plateau</button>
+          <button id="clearBoardBtn" class="btn secondary">Vider</button>
+        </div>
+      </div>
+
+      <div class="mt">
+        <div class="muted">Reprendre une partie depuis l’éditeur</div>
+        <div class="muted mt">Choisis le joueur qui doit jouer ensuite, puis le mode de reprise.</div>
+        <div class="row mt">
+          <label class="muted">Joueur suivant
+            <select id="resumeNextPlayer" class="sel">
+              <option value="R" selected>Rouge</option>
+              <option value="J">Jaune</option>
+            </select>
+          </label>
+
+          <label class="muted">Mode reprise
+            <select id="resumeMode" class="sel">
+              <option value="pvp" selected>Humain vs Humain</option>
+              <option value="vsai">Humain vs IA</option>
+              <option value="iaia">IA vs IA</option>
+            </select>
+          </label>
+
+          <button id="resumeBoardBtn" class="btn">Reprendre cette position</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card mt">
+      <h2>Statistiques globales</h2>
+      <div class="mt muted" id="globalStats">Stats...</div>
+    </section>
+  </aside>
+
+  <section class="mainBoardZone">
+    <div class="boardCard card">
+      <div class="boardHeader">
+        <div>
+          <div class="sectionTitle">Plateau</div>
+          <div class="muted" id="boardHint">Clique sur “Nouvelle partie”.</div>
+        </div>
+      </div>
+
+      <div class="boardArea">
+        <div class="boardTop" id="boardTop"></div>
+        <div class="board"><div id="grid"></div></div>
+      </div>
+
+      <div class="mt">
+        <div id="status" class="statusLine">Clique sur “Nouvelle partie”.</div>
+      </div>
+    </div>
   </section>
 </main>
 
-<script src="/static/play.js?v=20260304" defer></script>
+<script src="/static/play.js?v=20260312" defer></script>
 </body>
 </html>
