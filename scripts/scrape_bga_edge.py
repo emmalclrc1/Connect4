@@ -1,18 +1,34 @@
 ###############################################################
-# Scraper Edge + Micro-service Flask
-# Mission 4.1 : Import d'une seule partie BGA
-# ➜ Lancement : py -3.10 scrape_bga_edge.py --serve
+# Scraper Linux/Windows + Micro-service Flask
+# Import d'une seule partie BGA
+#
+# Linux :
+#   python3 scripts/scrape_bga_edge.py --serve
+#
+# Windows :
+#   py -3.10 scripts\scrape_bga_edge.py --serve
 ###############################################################
 
 import os
 import re
+import sys
 import time
+import shutil
 import requests
-from typing import List, Optional, Tuple, Dict
+from pathlib import Path
+from typing import Optional
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+
+# Edge
 from selenium.webdriver.edge.options import Options as EdgeOptions
+from selenium.webdriver.edge.service import Service as EdgeService
+
+# Chrome / Chromium fallback
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.chrome.service import Service as ChromeService
+
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -20,36 +36,54 @@ from selenium.webdriver.support import expected_conditions as EC
 # CONFIG
 ###############################################################
 
-USERNAME = os.environ["USERNAME"]
-PROFILE_PATH = fr"C:\Users\{USERNAME}\AppData\Local\Microsoft\Edge\User Data\selenium_bga"
+API_URL = os.environ.get(
+    "BGA_API_URL",
+    "https://connect4-vbdd.onrender.com/import-bga-auto"
+)
 
-# ⭐️ TON API RENDER CORRECTE
-API_URL = "https://connect4-vbdd.onrender.com/import-bga-auto"
+HOST = os.environ.get("BGA_SCRAPER_HOST", "127.0.0.1")
+PORT = int(os.environ.get("BGA_SCRAPER_PORT", "5001"))
+
+# Si tu veux forcer edge/chrome :
+# export BROWSER=edge
+# export BROWSER=chrome
+BROWSER = (os.environ.get("BROWSER") or "auto").lower()
+
+# Chemins optionnels vers les drivers
+EDGE_DRIVER_PATH = os.environ.get("EDGE_DRIVER_PATH", "").strip()
+CHROME_DRIVER_PATH = os.environ.get("CHROME_DRIVER_PATH", "").strip()
+
+# Profil Linux par défaut
+LINUX_PROFILE_DIR = os.environ.get(
+    "BGA_PROFILE_DIR",
+    str(Path.home() / ".config" / "selenium_bga")
+)
+
+# Profil Windows par défaut
+if os.name == "nt":
+    USERNAME = os.environ.get("USERNAME", "User")
+    WINDOWS_PROFILE_DIR = fr"C:\Users\{USERNAME}\AppData\Local\Microsoft\Edge\User Data\selenium_bga"
+else:
+    WINDOWS_PROFILE_DIR = ""
+
 
 ###############################################################
-# SELENIUM EDGE
+# HELPERS
 ###############################################################
 
-def start_edge(headless: bool = False):
-    opts = EdgeOptions()
-    opts.use_chromium = True
-    opts.add_argument(f"--user-data-dir={PROFILE_PATH}")
-    opts.add_argument("--disable-popup-blocking")
-    opts.add_argument("--disable-notifications")
-    opts.add_argument("--start-maximized")
+def is_linux() -> bool:
+    return sys.platform.startswith("linux")
 
-    if headless:
-        opts.add_argument("--headless=new")
-        opts.add_argument("--window-size=1400,900")
 
-    return webdriver.Edge(options=opts)
+def is_windows() -> bool:
+    return os.name == "nt"
 
-###############################################################
-# HELPERS : Warm-Up Render + POST robuste
-###############################################################
+
+def ensure_profile_dir(path_str: str):
+    Path(path_str).mkdir(parents=True, exist_ok=True)
+
 
 def warm_up(api_url: str, tries: int = 3):
-    """Réveille Render via /health + backoff."""
     health = api_url.replace("/import-bga-auto", "/health")
 
     for i in range(tries):
@@ -68,7 +102,6 @@ def warm_up(api_url: str, tries: int = 3):
 
 
 def robust_post_json(url: str, payload: dict, attempts: int = 4):
-    """POST solide avec retries exponentiels + timeout long."""
     for k in range(attempts):
         try:
             r = requests.post(url, json=payload, timeout=(10, 120))
@@ -85,14 +118,117 @@ def robust_post_json(url: str, payload: dict, attempts: int = 4):
 
     return None, None
 
+
+def find_binary(candidates):
+    for name in candidates:
+        p = shutil.which(name)
+        if p:
+            return p
+    return None
+
+
+###############################################################
+# NAVIGATEUR
+###############################################################
+
+def start_edge(headless: bool = False):
+    profile_path = WINDOWS_PROFILE_DIR if is_windows() else LINUX_PROFILE_DIR
+    ensure_profile_dir(profile_path)
+
+    opts = EdgeOptions()
+    opts.use_chromium = True
+    opts.add_argument(f"--user-data-dir={profile_path}")
+    opts.add_argument("--disable-popup-blocking")
+    opts.add_argument("--disable-notifications")
+    opts.add_argument("--start-maximized")
+    opts.add_argument("--no-sandbox")
+    opts.add_argument("--disable-dev-shm-usage")
+
+    if headless:
+        opts.add_argument("--headless=new")
+        opts.add_argument("--window-size=1400,900")
+
+    # Linux : essaie de trouver le binaire edge si installé
+    if is_linux():
+        edge_bin = find_binary(["microsoft-edge", "microsoft-edge-stable"])
+        if edge_bin:
+            opts.binary_location = edge_bin
+
+    # Si un driver explicite est fourni, on l'utilise
+    if EDGE_DRIVER_PATH:
+        service = EdgeService(EDGE_DRIVER_PATH)
+        return webdriver.Edge(service=service, options=opts)
+
+    # Sinon Selenium essaie de le résoudre automatiquement
+    return webdriver.Edge(options=opts)
+
+
+def start_chrome(headless: bool = False):
+    profile_path = str(Path.home() / ".config" / "selenium_bga_chrome")
+    ensure_profile_dir(profile_path)
+
+    opts = ChromeOptions()
+    opts.add_argument(f"--user-data-dir={profile_path}")
+    opts.add_argument("--disable-popup-blocking")
+    opts.add_argument("--disable-notifications")
+    opts.add_argument("--start-maximized")
+    opts.add_argument("--no-sandbox")
+    opts.add_argument("--disable-dev-shm-usage")
+
+    if headless:
+        opts.add_argument("--headless=new")
+        opts.add_argument("--window-size=1400,900")
+
+    chrome_bin = find_binary([
+        "google-chrome",
+        "google-chrome-stable",
+        "chromium",
+        "chromium-browser",
+    ])
+    if chrome_bin:
+        opts.binary_location = chrome_bin
+
+    if CHROME_DRIVER_PATH:
+        service = ChromeService(CHROME_DRIVER_PATH)
+        return webdriver.Chrome(service=service, options=opts)
+
+    return webdriver.Chrome(options=opts)
+
+
+def start_browser(headless: bool = False):
+    errors = []
+
+    if BROWSER in ("edge", "auto"):
+        try:
+            print("[browser] tentative Edge")
+            return start_edge(headless=headless)
+        except Exception as e:
+            errors.append(f"Edge: {e}")
+
+    if BROWSER in ("chrome", "chromium", "auto"):
+        try:
+            print("[browser] tentative Chrome/Chromium")
+            return start_chrome(headless=headless)
+        except Exception as e:
+            errors.append(f"Chrome: {e}")
+
+    raise RuntimeError("Impossible de lancer un navigateur Selenium.\n" + "\n".join(errors))
+
+
 ###############################################################
 # Scraper class
 ###############################################################
 
 class BGAScraper:
     def __init__(self, headless=False):
-        self.driver = start_edge(headless=headless)
+        self.driver = start_browser(headless=headless)
         self.wait = WebDriverWait(self.driver, 20)
+
+    def close(self):
+        try:
+            self.driver.quit()
+        except Exception:
+            pass
 
     def _ensure_viewpoint(self):
         try:
@@ -103,7 +239,6 @@ class BGAScraper:
                     By.XPATH,
                     "//a[normalize-space()='1er' or normalize-space()='1ᵉʳ']"
                 )
-
                 if cand:
                     self.driver.execute_script("arguments[0].click();", cand[0])
                     time.sleep(1)
@@ -231,6 +366,7 @@ class BGAScraper:
 
         return cols
 
+
 ###############################################################
 # FLASK MICRO-SERVICE
 ###############################################################
@@ -259,7 +395,13 @@ def import_bga_table():
         return jsonify({"ok": False, "error": "table invalide"}), 400
 
     if SCRAPER is None:
-        SCRAPER = BGAScraper(headless=False)
+        try:
+            SCRAPER = BGAScraper(headless=False)
+        except Exception as e:
+            return jsonify({
+                "ok": False,
+                "error": f"Impossible de lancer Selenium : {e}"
+            }), 500
 
     mv = SCRAPER.get_moves_with_colors_from_table(table_id)
 
@@ -287,9 +429,6 @@ def import_bga_table():
         "confiance": 1
     }
 
-    ###################################################################
-    # WARM-UP RENDER + POST ROBUSTE
-    ###################################################################
     warm_up(API_URL)
     r, api_json = robust_post_json(API_URL, payload)
 
@@ -318,15 +457,15 @@ def import_bga_table():
         "api": api_json
     })
 
+
 ###############################################################
-# MAIN: MODE SERVICE
+# MAIN
 ###############################################################
 
 if __name__ == "__main__":
-    import sys
-
     if len(sys.argv) > 1 and sys.argv[1] == "--serve":
-        print("🌐 Scraper Edge actif : http://127.0.0.1:5001")
-        app.run(host="127.0.0.1", port=5001, debug=False)
+        print(f"🌐 Scraper Selenium actif : http://{HOST}:{PORT}")
+        print(f"[config] browser={BROWSER} api={API_URL}")
+        app.run(host=HOST, port=PORT, debug=False)
     else:
-        print("Lance : py -3.10 scrape_bga_edge.py --serve")
+        print("Lance : python3 scripts/scrape_bga_edge.py --serve")
