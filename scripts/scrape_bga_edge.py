@@ -179,14 +179,19 @@ def start_chrome(headless: bool = False):
         opts.add_argument("--headless=new")
         opts.add_argument("--window-size=1400,900")
 
-    chrome_bin = find_binary([
-        "google-chrome",
-        "google-chrome-stable",
-        "chromium",
-        "chromium-browser",
-    ])
-    if chrome_bin:
-        opts.binary_location = chrome_bin
+    chrome_binary = os.environ.get("CHROME_BINARY", "").strip()
+    if chrome_binary:
+        opts.binary_location = chrome_binary
+    else:
+        for candidate in [
+            "/usr/bin/google-chrome-stable",
+            "/usr/bin/google-chrome",
+            "/usr/bin/chromium-browser",
+            "/snap/bin/chromium",
+        ]:
+            if os.path.exists(candidate):
+                opts.binary_location = candidate
+                break
 
     if CHROME_DRIVER_PATH:
         service = ChromeService(CHROME_DRIVER_PATH)
