@@ -21,7 +21,7 @@ from core.modele import (
     verifier_victoire,
     plateau_plein,
 )
-from core.ia import coup_aleatoire, coup_minimax
+from core.ia import coup_aleatoire, coup_minimax, coup_bga
 
 ModeUI = Literal["pvp", "vsai", "iaia"]
 AIType = Literal["random", "minimax", "bga"]
@@ -207,15 +207,25 @@ def _finish_db_game(game: dict, gagnant: Optional[str], draw: bool):
 # -------------------------
 # IA move
 # -------------------------
-def _ai_choose(ai_type: AIType, plateau, joueur_ia: str, depth: int) -> Optional[int]:
+def _ai_choose(
+    ai_type: AIType,
+    plateau,
+    joueur_ia: str,
+    depth: int,
+    coups_deja_joues: Optional[List[int]] = None,
+) -> Optional[int]:
     if ai_type == "random":
         return coup_aleatoire(plateau)
+
     if ai_type == "minimax":
         col, _ = coup_minimax(plateau, joueur_ia, profondeur=depth)
         return col
+
     if ai_type == "bga":
-        col, _ = coup_minimax(plateau, joueur_ia, profondeur=max(2, min(depth, 5)))
-        return col
+        coups_deja_joues = coups_deja_joues or []
+        with get_conn() as conn:
+            return coup_bga(plateau, coups_deja_joues, conn, joueur_ia)
+
     return None
 
 
@@ -809,7 +819,7 @@ async def new_game(
     auto = None
     if internal["kind"] == "vsai" and internal["ai"] == ROUGE:
         await asyncio.sleep(delay_ms / 1000.0)
-        col = _ai_choose(internal["ai_type"], plateau, ROUGE, int(depth))
+        col = _ai_choose(internal["ai_type"], plateau, ROUGE, int(depth), games[game_id]["coups"])
         if col is not None and coup_valide(plateau, col):
             row = jouer_coup(plateau, col, ROUGE)
             games[game_id]["coups"].append(col)
@@ -907,7 +917,13 @@ async def ai_move(game_id: str):
         await asyncio.sleep(game["delay_ms"] / 1000.0)
 
         plateau = game["plateau"]
-        col_ia = _ai_choose(internal["ai_type"], plateau, internal["ai"], game["depth"])
+        col_ia = _ai_choose(
+            internal["ai_type"],
+            plateau,
+            internal["ai"],
+            game["depth"],
+            game["coups"],
+        )
         if col_ia is None or not coup_valide(plateau, col_ia):
             return {"ok": False, "error": "IA ne trouve pas de coup"}
 
@@ -1065,7 +1081,7 @@ async def step(game_id: str):
         joueur = game["joueur"]
         ai_type = internal["ai_for"][joueur]
 
-        col = _ai_choose(ai_type, plateau, joueur, game["depth"])
+        col = _ai_choose(ai_type, plateau, joueur, game["depth"], game["coups"])
         if col is None or not coup_valide(plateau, col):
             return {"ok": False, "error": "IA ne trouve pas de coup"}
 
@@ -1104,3 +1120,4 @@ async def step(game_id: str):
             "draw": False,
             "mode_summary": _build_mode_summary(game),
         }
+
