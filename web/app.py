@@ -504,8 +504,15 @@ def api_stats():
 
 
 @app.get("/api/history")
-def api_history(limit: int = Query(5000, ge=1, le=5000), offset: int = Query(0, ge=0)):
+def api_history(limit: int = Query(200, ge=1, le=500), offset: int = Query(0, ge=0)):
     with get_conn() as conn:
+        total_row = safe_query(
+            conn,
+            "SELECT COUNT(*) FROM parties;",
+            fetch=True,
+        )
+        total = int(total_row[0][0] or 0) if total_row else 0
+
         rows = safe_query(
             conn,
             """
@@ -543,7 +550,14 @@ def api_history(limit: int = Query(5000, ge=1, le=5000), offset: int = Query(0, 
                 "nb_coups": int(nb_coups or 0),
             }
         )
-    return {"ok": True, "items": items}
+
+    return {
+        "ok": True,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "items": items,
+    }
 
 
 @app.get("/api/replay/{id_partie}")
