@@ -77,16 +77,16 @@ function updateModeSummary(data = null){
   }
 
   if (currentUIMode === "pvp"){
-    modeSummaryEl.textContent = "Mode actuel : Humain vs Humain";
+    modeSummaryEl.textContent = "Mode actuel : Joueur contre joueur";
   } else if (currentUIMode === "vsai"){
     const humanColor = document.getElementById("humanColor")?.value || "R";
     const aiType = document.getElementById("aiType")?.value || "minimax";
     const aiColor = humanColor === "R" ? "J" : "R";
-    modeSummaryEl.textContent = `Mode actuel : Humain vs IA — Humain : ${humanColor} — IA : ${aiColor} (${aiType})`;
+    modeSummaryEl.textContent = `Mode actuel : Joueur contre ordinateur — Tu joues : ${humanColor} — IA : ${aiColor} (${aiType})`;
   } else {
     const aiR = document.getElementById("aiR")?.value || "minimax";
     const aiJ = document.getElementById("aiJ")?.value || "bga";
-    modeSummaryEl.textContent = `Mode actuel : IA vs IA — Rouge : ${aiR} — Jaune : ${aiJ}`;
+    modeSummaryEl.textContent = `Mode actuel : Demonstration Auto — Rouge contre Jaune`;
   }
 }
 
@@ -283,7 +283,7 @@ function renderOptions(){
           </label>
         </div>
         <div class="settingCard">
-          <label class="muted">Type d’IA
+          <label class="muted"> Adversaire
             <select id="aiType" class="sel">
               <option value="random">Aléatoire</option>
               <option value="minimax" selected>Minimax</option>
@@ -308,7 +308,7 @@ function renderOptions(){
   optionsEl.innerHTML = `
     <div class="settingsGrid">
       <div class="settingCard">
-        <label class="muted">IA Rouge
+        <label class="muted">Rouge
           <select id="aiR" class="sel">
             <option value="random">Aléatoire</option>
             <option value="minimax" selected>Minimax</option>
@@ -317,7 +317,7 @@ function renderOptions(){
         </label>
       </div>
       <div class="settingCard">
-        <label class="muted">IA Jaune
+        <label class="muted">Jaune
           <select id="aiJ" class="sel">
             <option value="random">Aléatoire</option>
             <option value="minimax">Minimax</option>
@@ -336,7 +336,7 @@ function renderOptions(){
         </label>
       </div>
       <div class="settingCard settingActions">
-        <button id="runBtn" class="btn">▶ Lancer IA/IA</button>
+        <button id="runBtn" class="btn">▶ Lancer la demonstration</button>
         <button id="stopBtn" class="btn secondary">⏹ Stop</button>
       </div>
     </div>
@@ -424,7 +424,7 @@ async function maybeRunAIAfterHuman(){
     statusEl.textContent = "L’IA réfléchit...";
     setBusy(true);
     try{
-      await new Promise(resolve => setTimeout(resolve, VS_AI_DELAY_MS));
+      
       
       const res = await fetch(`/ai-move/${gameId}`, { method: "POST" });
       const data = await res.json();
