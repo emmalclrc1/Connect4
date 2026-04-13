@@ -7,7 +7,6 @@ let busy = false;
 let currentUIMode = "pvp";
 let editorEnabled = false;
 let iaiaRunning = false;
-const VS_AI_DELAY_MS = 350;
 
 const gridEl = document.getElementById("grid");
 const boardTopEl = document.getElementById("boardTop");
@@ -37,6 +36,23 @@ const resumeNextPlayerEl = document.getElementById("resumeNextPlayer");
 const resumeModeEl = document.getElementById("resumeMode");
 
 let lastAnalysis = null;
+
+function escapeHtml(s){
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function statCard(label, value, hint = ""){
+  return `
+    <div class="statBox">
+      <div class="statLabel">${escapeHtml(label)}</div>
+      <div class="statValue">${escapeHtml(value)}</div>
+      <div class="statHint">${escapeHtml(hint)}</div>
+    </div>
+  `;
+}
 
 function setBusy(v){
   busy = v;
@@ -246,14 +262,29 @@ function renderBoard(){
 }
 
 async function loadStats(){
+  const el = document.getElementById("globalStats");
+  if (!el) return;
+
+  el.innerHTML = "Chargement...";
+
   try{
     const res = await fetch("/api/stats");
     const data = await res.json();
-    if (!data.ok) throw new Error();
-    globalStatsEl.textContent =
-      `Parties : ${data.total} • Rouge : ${data.rouge} • Jaune : ${data.jaune} • Nuls : ${data.nuls} • En cours : ${data.en_cours}`;
-  }catch{
-    globalStatsEl.textContent = "Stats indisponibles";
+
+    if (!data.ok){
+      el.textContent = data.error || "Erreur de chargement";
+      return;
+    }
+
+    el.innerHTML = `
+      ${statCard("Parties totales", String(data.total ?? 0), "Toutes les parties enregistrées")}
+      ${statCard("Victoires Rouge", String(data.rouge ?? 0), "Parties gagnées par Rouge")}
+      ${statCard("Victoires Jaune", String(data.jaune ?? 0), "Parties gagnées par Jaune")}
+      ${statCard("Matchs nuls", String(data.nuls ?? 0), "Parties terminées sans gagnant")}
+      ${statCard("En cours", String(data.en_cours ?? 0), "Parties non terminées")}
+    `;
+  } catch (e){
+    el.textContent = "Erreur de chargement des statistiques";
   }
 }
 
@@ -330,11 +361,6 @@ function renderOptions(){
           <input id="depth" class="sel" type="number" min="1" max="9" value="4" />
         </label>
       </div>
-      <div class="settingCard">
-        <label class="muted">Délai (ms)
-          <input id="delay" class="sel" type="number" min="0" max="2000" value="350" />
-        </label>
-      </div>
       <div class="settingCard settingActions">
         <button id="runBtn" class="btn">▶ Lancer la demonstration</button>
         <button id="stopBtn" class="btn secondary">⏹ Stop</button>
@@ -377,8 +403,7 @@ async function newGame(){
       const aiR = document.getElementById("aiR")?.value || "minimax";
       const aiJ = document.getElementById("aiJ")?.value || "bga";
       const depth = document.getElementById("depth")?.value || "4";
-      const delay = document.getElementById("delay")?.value || "350";
-      url += `mode=iaia&ai_r=${encodeURIComponent(aiR)}&ai_j=${encodeURIComponent(aiJ)}&depth=${encodeURIComponent(depth)}&delay_ms=${encodeURIComponent(delay)}`;
+      url += `mode=iaia&ai_r=${encodeURIComponent(aiR)}&ai_j=${encodeURIComponent(aiJ)}&depth=${encodeURIComponent(depth)}&delay_ms=0`;
     }
 
     const res = await fetch(url, { method: "POST" });
@@ -392,15 +417,15 @@ async function newGame(){
     board = data.plateau;
     setSequence(data.sequence || "");
     updateModeSummary(data);
-    boardHintEl.textContent = "Le mode est actif, tu peux jouer.";
+    boardHintEl.textContent = "Tu peux jouer";
     if (currentUIMode === "vsai"){
       const humanColor = document.getElementById("humanColor")?.value || "R";
       if (data.auto?.ia_move !== undefined){
-        statusEl.textContent = "L’IA a joué. À toi de jouer";
+        statusEl.textContent = "L’Ia a joué. À toi";
       } else if (humanColor === "R"){
         statusEl.textContent = "À toi de jouer";
       } else {
-        statusEl.textContent = "L’IA réfléchit...";
+        statusEl.textContent = "L’Ia réfléchit...";
       }
     } else {
       statusEl.textContent = "Partie prête.";
@@ -420,8 +445,8 @@ async function maybeRunAIAfterHuman(){
   const humanColor = document.getElementById("humanColor")?.value || "R";
   const aiColor = humanColor === "R" ? "J" : "R";
 
-  if (statusEl.textContent.includes(`À ${aiColor} de jouer`) || statusEl.textContent.includes("L’IA réfléchit")){
-    statusEl.textContent = "L’IA réfléchit...";
+  if (statusEl.textContent.includes(`À ${aiColor} de jouer`) || statusEl.textContent.includes("L’Ia réfléchit")){
+    statusEl.textContent = "L’Ia réfléchit...";
     setBusy(true);
     try{
       
@@ -430,7 +455,7 @@ async function maybeRunAIAfterHuman(){
       const data = await res.json();
 
       if (!data.ok){
-        statusEl.textContent = data.error || "Erreur IA";
+        statusEl.textContent = data.error || "Erreur Ia";
         return;
       }
 
@@ -501,7 +526,7 @@ async function playMove(col){
       const aiColor = humanColor === "R" ? "J" : "R";
 
       if (data.next_player === aiColor){
-        statusEl.textContent = "L’IA réfléchit...";
+        statusEl.textContent = "L’Ia réfléchit...";
       } else if (data.next_player === humanColor){
         statusEl.textContent = "À toi de jouer";
       } else {
@@ -521,47 +546,48 @@ async function playMove(col){
   await maybeRunAIAfterHuman();
 }
 
-async function stepIAIA(){
-  const res = await fetch(`/step/${gameId}`, { method: "POST" });
-  const data = await res.json();
-  if (!data.ok){
-    statusEl.textContent = data.error || "Erreur step";
-    return { done: true };
-  }
-
-  board = data.plateau;
-  winPos = data.win_pos || null;
-  lastMove = data.last_move || null;
-  setSequence(data.sequence || "");
-  updateModeSummary(data);
-  renderBoard();
-
-  if (data.winner){
-    statusEl.textContent = `🎉 Victoire ${data.winner}`;
-    await loadStats();
-    return { done: true };
-  }
-  if (data.draw){
-    statusEl.textContent = "🤝 Match nul";
-    await loadStats();
-    return { done: true };
-  }
-
-  statusEl.textContent = `IA/IA — dernier coup col ${data.last_move?.col ?? "?"} — à ${data.next_player}`;
-  return { done: false };
-}
-
 async function runIAIA(){
-  if (!gameId || iaiaRunning) return;
+  if (!gameId || currentUIMode !== "iaia") return;
+
   iaiaRunning = true;
-  statusEl.textContent = "IA/IA en cours...";
+  statusEl.textContent = "Démonstration en cours...";
+
   while (iaiaRunning){
-    const { done } = await stepIAIA();
-    if (done) {
+    const res = await fetch(`/step/${gameId}`, { method: "POST" });
+    const data = await res.json();
+
+    if (!data.ok){
+      statusEl.textContent = data.error || "Erreur";
       iaiaRunning = false;
       break;
     }
-    await new Promise(r => setTimeout(r, 0));
+
+    board = data.plateau;
+    winPos = data.win_pos || null;
+    lastMove = data.last_move || null;
+    setSequence(data.sequence || "");
+    updateModeSummary(data);
+
+    renderBoard();
+    await fetchAnalysis();
+
+    if (data.winner){
+      statusEl.textContent = data.winner === "R"
+        ? "🎉 Victoire du joueur Rouge"
+        : "🎉 Victoire du joueur Jaune";
+      iaiaRunning = false;
+      await loadStats();
+      break;
+    }
+
+    if (data.draw){
+      statusEl.textContent = "🤝 Match nul";
+      iaiaRunning = false;
+      await loadStats();
+      break;
+    }
+
+    await new Promise(requestAnimationFrame);
   }
 }
 
@@ -580,7 +606,7 @@ async function switchModeKeepBoard(mode){
 
   let url = `/switch-mode/${gameId}?`;
   if (mode === "pvp"){
-    url += `mode=pvp&depth=4&delay_ms=350`;
+    url += `mode=pvp&depth=4&delay_ms=0`;
   } else if (mode === "vsai"){
     const humanColor = document.getElementById("humanColor")?.value || "R";
     const aiType = document.getElementById("aiType")?.value || "minimax";
@@ -590,8 +616,7 @@ async function switchModeKeepBoard(mode){
     const aiR = document.getElementById("aiR")?.value || "minimax";
     const aiJ = document.getElementById("aiJ")?.value || "bga";
     const depth = document.getElementById("depth")?.value || "4";
-    const delay = document.getElementById("delay")?.value || "350";
-    url += `mode=iaia&ai_r=${encodeURIComponent(aiR)}&ai_j=${encodeURIComponent(aiJ)}&depth=${encodeURIComponent(depth)}&delay_ms=${encodeURIComponent(delay)}`;
+    url += `mode=iaia&ai_r=${encodeURIComponent(aiR)}&ai_j=${encodeURIComponent(aiJ)}&depth=${encodeURIComponent(depth)}&delay_ms=0`;
   }
 
   setBusy(true);
@@ -735,8 +760,7 @@ async function resumeBoard(){
     const aiR = document.getElementById("aiR")?.value || "minimax";
     const aiJ = document.getElementById("aiJ")?.value || "bga";
     const depth = document.getElementById("depth")?.value || "4";
-    const delay = document.getElementById("delay")?.value || "350";
-    url += `&ai_r=${encodeURIComponent(aiR)}&ai_j=${encodeURIComponent(aiJ)}&depth=${encodeURIComponent(depth)}&delay_ms=${encodeURIComponent(delay)}`;
+    url += `&ai_r=${encodeURIComponent(aiR)}&ai_j=${encodeURIComponent(aiJ)}&depth=${encodeURIComponent(depth)}&delay_ms=0`;
   }
 
   setBusy(true);
