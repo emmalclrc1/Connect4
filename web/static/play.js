@@ -7,6 +7,7 @@ let busy = false;
 let currentUIMode = "pvp";
 let editorEnabled = false;
 let iaiaRunning = false;
+const VS_AI_DELAY_MS = 350;
 
 const gridEl = document.getElementById("grid");
 const boardTopEl = document.getElementById("boardTop");
@@ -295,11 +296,6 @@ function renderOptions(){
             <input id="depth" class="sel" type="number" min="1" max="9" value="4" />
           </label>
         </div>
-        <div class="settingCard">
-          <label class="muted">Délai IA (ms)
-            <input id="delay" class="sel" type="number" min="0" max="2000" value="500" />
-          </label>
-        </div>
       </div>
     `;
     optionsEl.querySelectorAll("select,input").forEach(el => {
@@ -373,11 +369,10 @@ async function newGame(){
     if (currentUIMode === "pvp"){
       url += "mode=pvp";
     } else if (currentUIMode === "vsai"){
-      const humanColor = document.getElementById("humanColor")?.value || "R";
-      const aiType = document.getElementById("aiType")?.value || "minimax";
-      const depth = document.getElementById("depth")?.value || "4";
-      const delay = document.getElementById("delay")?.value || "500";
-      url += `mode=vsai&human_color=${encodeURIComponent(humanColor)}&ai_type=${encodeURIComponent(aiType)}&depth=${encodeURIComponent(depth)}&delay_ms=${encodeURIComponent(delay)}`;
+        const humanColor = document.getElementById("humanColor")?.value || "R";
+        const aiType = document.getElementById("aiType")?.value || "minimax";
+        const depth = document.getElementById("depth")?.value || "4";
+        url += `mode=vsai&human_color=${encodeURIComponent(humanColor)}&ai_type=${encodeURIComponent(aiType)}&depth=${encodeURIComponent(depth)}&delay_ms=0`;
     } else {
       const aiR = document.getElementById("aiR")?.value || "minimax";
       const aiJ = document.getElementById("aiJ")?.value || "bga";
@@ -398,10 +393,17 @@ async function newGame(){
     setSequence(data.sequence || "");
     updateModeSummary(data);
     boardHintEl.textContent = "Le mode est actif, tu peux jouer.";
-    statusEl.textContent = "Partie prête.";
-
-    if (data.auto?.ia_move !== undefined){
-      statusEl.textContent = `L’IA commence (col ${data.auto.ia_move}) — à toi`;
+    if (currentUIMode === "vsai"){
+      const humanColor = document.getElementById("humanColor")?.value || "R";
+      if (data.auto?.ia_move !== undefined){
+        statusEl.textContent = "L’IA a joué. À toi de jouer";
+      } else if (humanColor === "R"){
+        statusEl.textContent = "À toi de jouer";
+      } else {
+        statusEl.textContent = "L’IA réfléchit...";
+      }
+    } else {
+      statusEl.textContent = "Partie prête.";
     }
 
     renderBoard();
@@ -422,6 +424,8 @@ async function maybeRunAIAfterHuman(){
     statusEl.textContent = "L’IA réfléchit...";
     setBusy(true);
     try{
+      await new Promise(resolve => setTimeout(resolve, VS_AI_DELAY_MS));
+      
       const res = await fetch(`/ai-move/${gameId}`, { method: "POST" });
       const data = await res.json();
 
@@ -492,10 +496,23 @@ async function playMove(col){
       return;
     }
 
-    if (data.next_player){
-      statusEl.textContent = `À ${data.next_player} de jouer`;
+    if (currentUIMode === "vsai"){
+      const humanColor = document.getElementById("humanColor")?.value || "R";
+      const aiColor = humanColor === "R" ? "J" : "R";
+
+      if (data.next_player === aiColor){
+        statusEl.textContent = "L’IA réfléchit...";
+      } else if (data.next_player === humanColor){
+        statusEl.textContent = "À toi de jouer";
+      } else {
+        statusEl.textContent = "—";
+      }
     } else {
-      statusEl.textContent = "—";
+      if (data.next_player){
+        statusEl.textContent = `À ${data.next_player} de jouer`;
+      } else {
+        statusEl.textContent = "—";
+      }
     }
   } finally {
     setBusy(false);
@@ -568,8 +585,7 @@ async function switchModeKeepBoard(mode){
     const humanColor = document.getElementById("humanColor")?.value || "R";
     const aiType = document.getElementById("aiType")?.value || "minimax";
     const depth = document.getElementById("depth")?.value || "4";
-    const delay = document.getElementById("delay")?.value || "500";
-    url += `mode=vsai&human_color=${encodeURIComponent(humanColor)}&ai_type=${encodeURIComponent(aiType)}&depth=${encodeURIComponent(depth)}&delay_ms=${encodeURIComponent(delay)}`;
+    url += `mode=vsai&human_color=${encodeURIComponent(humanColor)}&ai_type=${encodeURIComponent(aiType)}&depth=${encodeURIComponent(depth)}&delay_ms=0`;
   } else {
     const aiR = document.getElementById("aiR")?.value || "minimax";
     const aiJ = document.getElementById("aiJ")?.value || "bga";
@@ -714,8 +730,7 @@ async function resumeBoard(){
     const humanColor = document.getElementById("humanColor")?.value || "R";
     const aiType = document.getElementById("aiType")?.value || "minimax";
     const depth = document.getElementById("depth")?.value || "4";
-    const delay = document.getElementById("delay")?.value || "500";
-    url += `&human_color=${encodeURIComponent(humanColor)}&ai_type=${encodeURIComponent(aiType)}&depth=${encodeURIComponent(depth)}&delay_ms=${encodeURIComponent(delay)}`;
+    url += `&human_color=${encodeURIComponent(humanColor)}&ai_type=${encodeURIComponent(aiType)}&depth=${encodeURIComponent(depth)}&delay_ms=0`;
   } else if (mode === "iaia"){
     const aiR = document.getElementById("aiR")?.value || "minimax";
     const aiJ = document.getElementById("aiJ")?.value || "bga";

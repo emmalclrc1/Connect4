@@ -127,20 +127,24 @@ h3{ font-size:16px; }
 .dropBtn{
   width:100%;
   padding:8px 0;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,.12);
-  background:rgba(255,255,255,.06);
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.08);
   color:var(--text);
   cursor:pointer;
+  font-weight:700;
 }
-.dropBtn:hover{ background:rgba(255,255,255,.10); }
+.dropBtn:hover{
+  background:rgba(255,255,255,.14);
+}
 
 .board{
   width:min(94vw,600px);
-  background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:18px;
-  padding:12px;
+  background: linear-gradient(180deg, #1d4ed8, #1e40af);
+  border: 2px solid rgba(255,255,255,.16);
+  border-radius: 20px;
+  padding: 14px;
+  box-shadow: 0 14px 34px rgba(0,0,0,.32);
 }
 
 #grid{
@@ -151,9 +155,9 @@ h3{ font-size:16px; }
 
 .cell{
   aspect-ratio: 1 / 1;
-  border-radius:14px;
-  background:rgba(0,0,0,.18);
-  border:1px solid rgba(255,255,255,.08);
+  border-radius: 50%;
+  background: rgba(8,15,35,.92);
+  border: 2px solid rgba(255,255,255,.08);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -176,8 +180,15 @@ h3{ font-size:16px; }
   transform: translateY(0);
 }
 
-.piece.red{ background: radial-gradient(circle at 30% 30%, #ffb3b3, #ff2b2b 70%); border-color: rgba(255,255,255,.18); }
-.piece.yellow{ background: radial-gradient(circle at 30% 30%, #fff3b0, #ffcc00 70%); border-color: rgba(255,255,255,.18); }
+.piece.red{
+  background: radial-gradient(circle at 30% 30%, #ffd1d1, #ff2020 72%);
+  border-color: rgba(255,255,255,.22);
+}
+
+.piece.yellow{
+  background: radial-gradient(circle at 30% 30%, #fff8cf, #ffd400 72%);
+  border-color: rgba(255,255,255,.22);
+}
 
 @keyframes dropIn {
   0% { transform: translateY(-140%); }
