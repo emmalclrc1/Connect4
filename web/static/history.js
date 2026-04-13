@@ -51,7 +51,7 @@ async function loadHistory(){
       : items.filter(it => (it.statut || "") === f);
 
     countEl.textContent =
-      `${filtered.length} parties affichées (sur les ${HISTORY_LIMIT} dernières chargées) — Total inséré en base : ${total}`;
+      `${filtered.length} parties affichées — Total inséré en base : ${total}`;
 
     if (!filtered.length){
       tbody.innerHTML = `<tr><td colspan="7">Aucune partie à afficher.</td></tr>`;
