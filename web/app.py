@@ -21,7 +21,12 @@ from core.modele import (
     verifier_victoire,
     plateau_plein,
 )
-from core.ia import coup_aleatoire, coup_minimax, coup_bga
+from core.ia import (
+    coup_aleatoire,
+    coup_minimax,
+    coup_bga,
+    prediction_gagnant_et_coups,
+)
 
 ModeUI = Literal["pvp", "vsai", "iaia"]
 AIType = Literal["random", "minimax", "bga"]
@@ -334,7 +339,20 @@ def api_analyze(
 
     best_col, scores = coup_minimax(plateau, for_player, profondeur=depth)
     verdict = _verdict_from_scores(scores, depth)
-    pv = _pv_find_win_line(plateau, for_player, depth, max_len=12) if verdict == "VICTOIRE" else None
+
+    gagnant_predit = None
+    nb_coups_avant_victoire = None
+    pv = None
+
+    if verdict == "VICTOIRE":
+        gagnant_predit, nb_coups_avant_victoire, pv = prediction_gagnant_et_coups(
+            plateau, for_player, depth, max_len=14
+        )
+    elif verdict == "DEFAITE":
+        adv = JAUNE if for_player == ROUGE else ROUGE
+        gagnant_predit, nb_coups_avant_victoire, pv = prediction_gagnant_et_coups(
+            plateau, adv, depth, max_len=12
+        )
 
     scores_list = []
     for c in range(COLONNES):
@@ -349,6 +367,8 @@ def api_analyze(
         "best_col": best_col,
         "verdict": verdict,
         "pv": pv,
+        "predicted_winner": gagnant_predit,
+        "moves_to_win": nb_coups_avant_victoire,
         "existing_winner": None,
         "winning_cells": None,
     }
@@ -400,7 +420,20 @@ def api_analyze_sequence(
 
     best_col, scores = coup_minimax(plateau, for_player, profondeur=depth)
     verdict = _verdict_from_scores(scores, depth)
-    pv = _pv_find_win_line(plateau, for_player, depth, max_len=14) if verdict == "VICTOIRE" else None
+
+    gagnant_predit = None
+    nb_coups_avant_victoire = None
+    pv = None
+
+    if verdict == "VICTOIRE":
+        gagnant_predit, nb_coups_avant_victoire, pv = prediction_gagnant_et_coups(
+            plateau, for_player, depth, max_len=14
+        )
+    elif verdict == "DEFAITE":
+        adv = JAUNE if for_player == ROUGE else ROUGE
+        gagnant_predit, nb_coups_avant_victoire, pv = prediction_gagnant_et_coups(
+            plateau, adv, depth, max_len=14
+        )
 
     scores_list = []
     for c in range(COLONNES):
@@ -417,6 +450,8 @@ def api_analyze_sequence(
         "best_col": best_col,
         "verdict": verdict,
         "pv": pv,
+        "predicted_winner": gagnant_predit,
+        "moves_to_win": nb_coups_avant_victoire,
         "existing_winner": None,
         "winning_cells": None,
     }
@@ -453,7 +488,20 @@ def api_analyze_board(
 
     best_col, scores = coup_minimax(board, for_player, profondeur=depth)
     verdict = _verdict_from_scores(scores, depth)
-    pv = _pv_find_win_line(board, for_player, depth, max_len=14) if verdict == "VICTOIRE" else None
+
+    gagnant_predit = None
+    nb_coups_avant_victoire = None
+    pv = None
+
+    if verdict == "VICTOIRE":
+        gagnant_predit, nb_coups_avant_victoire, pv = prediction_gagnant_et_coups(
+            board, for_player, depth, max_len=14
+        )
+    elif verdict == "DEFAITE":
+        adv = JAUNE if for_player == ROUGE else ROUGE
+        gagnant_predit, nb_coups_avant_victoire, pv = prediction_gagnant_et_coups(
+            board, adv, depth, max_len=14
+        )
 
     scores_list = []
     for c in range(COLONNES):
@@ -468,6 +516,8 @@ def api_analyze_board(
         "best_col": best_col,
         "verdict": verdict,
         "pv": pv,
+        "predicted_winner": gagnant_predit,
+        "moves_to_win": nb_coups_avant_victoire,
         "existing_winner": None,
         "winning_cells": None,
     }
@@ -832,7 +882,6 @@ async def new_game(
 
     auto = None
     if internal["kind"] == "vsai" and internal["ai"] == ROUGE:
-        await asyncio.sleep(game["delay_ms"] / 1000.0)
         col = _ai_choose(internal["ai_type"], plateau, ROUGE, int(depth), games[game_id]["coups"])
         if col is not None and coup_valide(plateau, col):
             row = jouer_coup(plateau, col, ROUGE)
@@ -927,8 +976,6 @@ async def ai_move(game_id: str):
 
         if game["joueur"] != internal["ai"]:
             return {"ok": False, "error": "Ce n'est pas le tour de l'IA"}
-
-        await asyncio.sleep(game["delay_ms"] / 1000.0)
 
         plateau = game["plateau"]
         col_ia = _ai_choose(

@@ -431,6 +431,33 @@ def principal_variation_from_board(plateau, joueur_a_jouer: str, profondeur: int
         d -= 1
 
     return pv
+    
+def prediction_gagnant_et_coups(plateau, joueur_a_jouer: str, profondeur: int, max_len: int = 12):
+    """
+    Retourne :
+      - gagnant_predit : "R", "J" ou None
+      - nb_coups_avant_victoire : nombre de demi-coups dans la PV, ou None
+      - pv : ligne principale déjà calculée
+    """
+    pv = principal_variation_from_board(plateau, joueur_a_jouer, profondeur, max_len=max_len)
+
+    if not pv:
+        return None, None, []
+
+    p = [row[:] for row in plateau]
+
+    for i, step in enumerate(pv, start=1):
+        joueur = step["joueur"]
+        col = step["col"]
+        if col is None or not coup_valide(p, col):
+            break
+
+        jouer_coup(p, col, joueur)
+
+        if verifier_victoire(p, joueur):
+            return joueur, i, pv
+
+    return None, None, pv
   
 
 

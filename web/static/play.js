@@ -106,7 +106,7 @@ function updateModeSummary(data = null){
     modeSummaryEl.textContent = `Mode actuel : Joueur contre ordinateur — Tu joues : ${humanColor} — IA : ${aiColor} (${aiType})`;
   } else {
     const aiR = document.getElementById("aiR")?.value || "minimax";
-    const aiJ = document.getElementById("aiJ")?.value || "bga";
+    const aiJ = document.getElementById("aiJ")?.value || "minimax";
     modeSummaryEl.textContent = `Mode actuel : Demonstration Auto — Rouge contre Jaune`;
   }
 }
@@ -149,13 +149,26 @@ function applyAnalysisToUI(){
     if (bw) bw.classList.add("best");
   }
 
+  const predictedWinner = lastAnalysis.predicted_winner;
+  const movesToWin = lastAnalysis.moves_to_win;
+
   verdictEl.textContent = lastAnalysis.verdict || "—";
+
+  if (predictedWinner && movesToWin !== null && movesToWin !== undefined) {
+    verdictEl.textContent += ` — Gagnant prédit : ${predictedWinner} — Victoire estimée en ${movesToWin} coup(s)`;
+  } else if (predictedWinner) {
+    verdictEl.textContent += ` — Gagnant prédit : ${predictedWinner}`;
+  }
+
   bestMoveEl.textContent = (bestCol === null || bestCol === undefined) ? "—" : String(bestCol);
 
   if (lastAnalysis.existing_winner){
     pvLineEl.textContent = `Victoire déjà présente pour ${lastAnalysis.existing_winner}`;
   } else if (lastAnalysis.pv && lastAnalysis.pv.length){
-    pvLineEl.textContent = `Ligne proposée : ${lastAnalysis.pv.join(" → ")}`;
+    const pvText = lastAnalysis.pv
+      .map(step => typeof step === "object" ? `${step.joueur}:${step.col}` : String(step))
+      .join(" → ");
+    pvLineEl.textContent = `Ligne proposée : ${pvText}`;
   } else {
     pvLineEl.textContent = "";
   }
@@ -356,8 +369,8 @@ function renderOptions(){
         <label class="muted">Jaune
           <select id="aiJ" class="sel">
             <option value="random">Aléatoire</option>
-            <option value="minimax">Minimax</option>
-            <option value="bga" selected>BGA</option>
+            <option value="minimax" selected>Minimax</option>
+            <option value="bga">BGA</option>
           </select>
         </label>
       </div>
@@ -406,7 +419,7 @@ async function newGame(){
         url += `mode=vsai&human_color=${encodeURIComponent(humanColor)}&ai_type=${encodeURIComponent(aiType)}&depth=${encodeURIComponent(depth)}&delay_ms=0`;
     } else {
       const aiR = document.getElementById("aiR")?.value || "minimax";
-      const aiJ = document.getElementById("aiJ")?.value || "bga";
+      const aiJ = document.getElementById("aiJ")?.value || "minimax";
       const depth = document.getElementById("depth")?.value || "4";
       url += `mode=iaia&ai_r=${encodeURIComponent(aiR)}&ai_j=${encodeURIComponent(aiJ)}&depth=${encodeURIComponent(depth)}&delay_ms=0`;
     }
@@ -619,7 +632,7 @@ async function switchModeKeepBoard(mode){
     url += `mode=vsai&human_color=${encodeURIComponent(humanColor)}&ai_type=${encodeURIComponent(aiType)}&depth=${encodeURIComponent(depth)}&delay_ms=0`;
   } else {
     const aiR = document.getElementById("aiR")?.value || "minimax";
-    const aiJ = document.getElementById("aiJ")?.value || "bga";
+    const aiJ = document.getElementById("aiJ")?.value || "minimax";
     const depth = document.getElementById("depth")?.value || "4";
     url += `mode=iaia&ai_r=${encodeURIComponent(aiR)}&ai_j=${encodeURIComponent(aiJ)}&depth=${encodeURIComponent(depth)}&delay_ms=0`;
   }
@@ -680,7 +693,16 @@ async function analyzeSequence(){
 
     setSequence(data.sequence_applied || "");
     updateModeSummary();
-    statusEl.textContent = `Analyse OK — Verdict : ${data.verdict}${data.best_col !== null && data.best_col !== undefined ? ` — Meilleur coup : ${data.best_col}` : ""}`;
+    let extraPrediction = "";
+    if (data.predicted_winner && data.moves_to_win !== null && data.moves_to_win !== undefined) {
+      extraPrediction = ` — Gagnant prédit : ${data.predicted_winner} — Victoire estimée en ${data.moves_to_win} coup(s)`;
+    } else if (data.predicted_winner) {
+      extraPrediction = ` — Gagnant prédit : ${data.predicted_winner}`;
+    }
+
+    statusEl.textContent = `Analyse OK — Verdict : ${data.verdict}${extraPrediction}${data.best_col !== null && data.best_col !== undefined ? ` — Meilleur coup : ${data.best_col}` : ""}`;
+    
+    
     boardHintEl.textContent = "Position chargée depuis une séquence.";
     renderBoard();
   }catch{
@@ -711,7 +733,15 @@ async function analyzeBoard(){
 
     lastAnalysis = data;
     winPos = data.winning_cells || null;
-    statusEl.textContent = `Analyse plateau — Verdict : ${data.verdict}${data.best_col !== null && data.best_col !== undefined ? ` — Meilleur coup : ${data.best_col}` : ""}`;
+    let extraPrediction = "";
+    if (data.predicted_winner && data.moves_to_win !== null && data.moves_to_win !== undefined) {
+      extraPrediction = ` — Gagnant prédit : ${data.predicted_winner} — Victoire estimée en ${data.moves_to_win} coup(s)`;
+    } else if (data.predicted_winner) {
+      extraPrediction = ` — Gagnant prédit : ${data.predicted_winner}`;
+    }
+
+    statusEl.textContent = `Analyse plateau — Verdict : ${data.verdict}${extraPrediction}${data.best_col !== null && data.best_col !== undefined ? ` — Meilleur coup : ${data.best_col}` : ""}`;
+    
     boardHintEl.textContent = "Plateau édité analysé.";
     renderBoard();
   }catch{
@@ -755,7 +785,7 @@ async function resumeBoard(){
   let url = `/start-from-board?mode=${encodeURIComponent(mode)}&next_player=${encodeURIComponent(nextPlayer)}`;
 
   if (mode === "pvp"){
-    url += `&depth=4&delay_ms=350`;
+    url += `&depth=4&delay_ms=0`;
   } else if (mode === "vsai"){
     const humanColor = document.getElementById("humanColor")?.value || "R";
     const aiType = document.getElementById("aiType")?.value || "minimax";
@@ -763,7 +793,7 @@ async function resumeBoard(){
     url += `&human_color=${encodeURIComponent(humanColor)}&ai_type=${encodeURIComponent(aiType)}&depth=${encodeURIComponent(depth)}&delay_ms=0`;
   } else if (mode === "iaia"){
     const aiR = document.getElementById("aiR")?.value || "minimax";
-    const aiJ = document.getElementById("aiJ")?.value || "bga";
+    const aiJ = document.getElementById("aiJ")?.value || "minimax";
     const depth = document.getElementById("depth")?.value || "4";
     url += `&ai_r=${encodeURIComponent(aiR)}&ai_j=${encodeURIComponent(aiJ)}&depth=${encodeURIComponent(depth)}&delay_ms=0`;
   }
