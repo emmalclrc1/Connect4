@@ -858,3 +858,14 @@ assistHumanEl.addEventListener("change", () => { if (gameId) fetchAnalysis(); })
 renderOptions();
 updateModeSummary();
 loadStats();
+
+// Affichage initial d'un plateau vide, sans créer de partie ni écrire en base
+board = emptyBoard(9, 9);
+gameId = null;
+winPos = null;
+lastMove = null;
+setSequence("");
+setAnalysisUIEmpty();
+boardHintEl.textContent = "Plateau prêt. Clique sur Analyser ou Nouvelle partie.";
+statusEl.textContent = "Plateau affiché sans démarrer de partie.";
+renderBoard();
