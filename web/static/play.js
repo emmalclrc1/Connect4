@@ -27,7 +27,7 @@ const assistHumanEl = document.getElementById("assistHuman");
 const seqInputEl = document.getElementById("seqInput");
 
 if (seqInputEl && !seqInputEl.value) {
-  seqInputEl.value = "7,7,3,3,3,4,2,4,4,2,2,6";
+  seqInputEl.value = "3,8,4,8,5,7,0,7";
 }
 
 const seqPlayerEl = document.getElementById("seqPlayer");
