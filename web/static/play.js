@@ -25,6 +25,11 @@ const analysisDepthEl = document.getElementById("analysisDepth");
 const assistHumanEl = document.getElementById("assistHuman");
 
 const seqInputEl = document.getElementById("seqInput");
+
+if (seqInputEl && !seqInputEl.value) {
+  seqInputEl.value = "7,7,3,3,3,4,2,4,4,2,2,6";
+}
+
 const seqPlayerEl = document.getElementById("seqPlayer");
 const analyzeSeqBtn = document.getElementById("analyzeSeqBtn");
 

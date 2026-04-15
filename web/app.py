@@ -802,9 +802,9 @@ async def new_game(
     human_color: Literal["R", "J"] = "R",
     ai_type: AIType = "minimax",
     depth: int = Query(4, ge=1, le=9),
-    delay_ms: int = Query(350, ge=0, le=2000),
+    delay_ms: int = Query(0, ge=0, le=2000),
     ai_r: AIType = "minimax",
-    ai_j: AIType = "bga",
+    ai_j: AIType = "minimax",
 ):
     plateau = creer_plateau()
     game_id = uuid4().hex
@@ -832,7 +832,7 @@ async def new_game(
 
     auto = None
     if internal["kind"] == "vsai" and internal["ai"] == ROUGE:
-        await asyncio.sleep(delay_ms / 1000.0)
+        await asyncio.sleep(game["delay_ms"] / 1000.0)
         col = _ai_choose(internal["ai_type"], plateau, ROUGE, int(depth), games[game_id]["coups"])
         if col is not None and coup_valide(plateau, col):
             row = jouer_coup(plateau, col, ROUGE)
@@ -985,9 +985,9 @@ async def switch_mode(
     human_color: Literal["R", "J"] = "R",
     ai_type: AIType = "minimax",
     ai_r: AIType = "minimax",
-    ai_j: AIType = "bga",
+    ai_j: AIType = "minimax",
     depth: int = Query(4, ge=1, le=9),
-    delay_ms: int = Query(350, ge=0, le=2000),
+    delay_ms: int = Query(0, ge=0, le=2000),
 ):
     game = games.get(game_id)
     if not game:
@@ -1022,9 +1022,9 @@ async def start_from_board(
     human_color: Literal["R", "J"] = "R",
     ai_type: AIType = "minimax",
     ai_r: AIType = "minimax",
-    ai_j: AIType = "bga",
+    ai_j: AIType = "minimax",
     depth: int = Query(4, ge=1, le=9),
-    delay_ms: int = Query(350, ge=0, le=2000),
+    delay_ms: int = Query(0, ge=0, le=2000),
 ):
     if not isinstance(board, list) or len(board) != LIGNES:
         return {"ok": False, "error": "Board invalide (lignes)"}
