@@ -866,6 +866,4 @@ winPos = null;
 lastMove = null;
 setSequence("");
 setAnalysisUIEmpty();
-boardHintEl.textContent = "Plateau prêt. Clique sur Analyser ou Nouvelle partie.";
-statusEl.textContent = "Plateau affiché sans démarrer de partie.";
 renderBoard();
